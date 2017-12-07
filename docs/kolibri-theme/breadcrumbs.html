@@ -1,0 +1,40 @@
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="{{ pathto(master_doc) }}">Docs</a> &raquo;</li>
+      {% for doc in parents %}
+          <li><a href="{{ doc.link|e }}">{{ doc.title }}</a> &raquo;</li>
+      {% endfor %}
+    <li>{{ title }}</li>
+      <li class="wy-breadcrumbs-aside">
+        {% if pagename != "search" %}
+          {% if "" and display_github %}
+            <a href="https://{{ github_host|default("github.com") }}/{{ github_user }}/{{ github_repo }}/blob/{{ github_version }}{{ conf_py_path }}{{ pagename }}{{ source_suffix }}" class="fa fa-github"> Edit on GitHub</a>
+          {% elif display_bitbucket %}
+            <a href="https://bitbucket.org/{{ bitbucket_user }}/{{ bitbucket_repo }}/src/{{ bitbucket_version}}{{ conf_py_path }}{{ pagename }}{{ source_suffix }}" class="fa fa-bitbucket"> Edit on Bitbucket</a>
+          {% elif show_source and source_url_prefix %}
+            <a href="{{ source_url_prefix }}{{ pagename }}{{ source_suffix }}">View page source</a>
+          {% elif "" and show_source and has_source and sourcename %}
+            <a href="{{ pathto('_sources/' + sourcename, true)|e }}" rel="nofollow"> View page source</a>
+          {% endif %}
+        {% endif %}
+        {% if "" and not display_github %}
+          <a href="http://github.com/learningequality/ka-lite/blob/{{ theme_git_branch }}/sphinx-docs/{{ pagename }}.rst" class="fa fa-github">
+              View on Github
+          </a>
+        {% endif %}
+      </li>
+  </ul>
+  <hr/>
+</div>
+<style>
+  /* Style the literal block because it's missing styling */
+  pre.literal-block
+  {
+    padding: 12px 12px !important;
+    font-family: Consolas,"Andale Mono WT","Andale Mono","Lucida Console","Lucida Sans Typewriter","DejaVu Sans Mono","Bitstream Vera Sans Mono","Liberation Mono","Nimbus Mono L",Monaco,"Courier New",Courier,monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #404040;
+    overflow: auto;
+  }
+</style>
