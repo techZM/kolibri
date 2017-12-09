@@ -3,29 +3,37 @@
   <core-modal :title="$tr('niceWork')" @cancel="closePopover">
 
     <div class="progress-icon">
-      <progress-icon :progress="1"/>
+      <progress-icon :progress="1" />
     </div>
 
 
     <div class="points-wrapper">
       <!-- <h2>{{ $tr('pointsForCompletion') }}</h2> -->
       <div class="points">
-        <points-icon class="points-icon" :active="true"/>
+        <points-icon class="points-icon" :active="true" />
         <span class="points-amount">{{ $tr('plusPoints', { maxPoints }) }}</span>
       </div>
     </div>
 
+    <ui-alert
+      v-if="!isUserLoggedIn"
+      :dismissible="false"
+      type="warning"
+    >
+      {{ $tr('signIn') }}
+    </ui-alert>
+
     <div class="next-item-section">
       <h2 class="next-item-heading">{{ $tr('nextContent') }}</h2>
       <div>
-        <content-icon class="nex-item-icon" :kind="kind"/>
+        <content-icon class="nex-item-icon" :kind="kind" />
         <span class="next-item-title">{{ title }}</span>
       </div>
     </div>
 
     <div class="buttons">
-      <icon-button :text="$tr('close')" @click="closePopover" class="close-button"/>
-      <slot name="nextItemBtn"/>
+      <k-button :text="$tr('close')" @click="closePopover" />
+      <slot name="nextItemBtn"></slot>
     </div>
 
   </core-modal>
@@ -35,15 +43,17 @@
 
 <script>
 
-  import { contentPoints } from 'kolibri.coreVue.vuex.getters';
+  import { contentPoints, isUserLoggedIn } from 'kolibri.coreVue.vuex.getters';
   import { MaxPointsPerContent, ContentNodeKinds } from 'kolibri.coreVue.vuex.constants';
   import pointsIcon from 'kolibri.coreVue.components.pointsIcon';
   import contentIcon from 'kolibri.coreVue.components.contentIcon';
   import progressIcon from 'kolibri.coreVue.components.progressIcon';
   import coreModal from 'kolibri.coreVue.components.coreModal';
-  import iconButton from 'kolibri.coreVue.components.iconButton';
+  import kButton from 'kolibri.coreVue.components.kButton';
+  import uiAlert from 'keen-ui/src/UiAlert';
+
   export default {
-    $trNameSpace: 'pointsPopup',
+    name: 'pointsPopup',
     $trs: {
       plusPoints: '+ { maxPoints, number } Points',
       niceWork: 'Great work! Keep it up!',
@@ -57,15 +67,22 @@
       item: 'Item',
       close: 'Close',
       pointsForCompletion: 'Points for completion',
+      signIn: 'Sign in or create an account to save points you earn',
     },
     components: {
       pointsIcon,
       contentIcon,
       progressIcon,
       coreModal,
-      iconButton,
+      kButton,
+      uiAlert,
     },
-    vuex: { getters: { contentPoints } },
+    vuex: {
+      getters: {
+        contentPoints,
+        isUserLoggedIn,
+      },
+    },
     props: {
       kind: { type: String },
       title: { type: String },

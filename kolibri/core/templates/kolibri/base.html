@@ -1,12 +1,14 @@
 {% load i18n kolibri_tags webpack_tags content_tags cache %}
 {% load staticfiles %}
+{% get_current_language_bidi as LANGUAGE_BIDI %}
 {% get_current_language as LANGUAGE_CODE %}
 <!DOCTYPE html>
-<html>
+<html dir="{{ LANGUAGE_BIDI|yesno:'rtl,ltr' }}">
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google" content="notranslate">
   <link rel="shortcut icon" href="{% static 'images/logo.ico' %}">
   <title>{% trans "Kolibri" %}</title>
   {% if LANGUAGE_CODE == "ach-ug" %}
@@ -18,6 +20,8 @@
   {% endif %}
 </head>
 <body>
+{% csrf_token %}
+{% if supported_browser %}
 <rootvue>
   <style>
     .loading-spinner-wrapper-base{
@@ -53,13 +57,8 @@
   </script>
 </rootvue>
 {% block frontend_assets %}
-<script>
-  // Set global language variable.
-  var languageCode = "{{ LANGUAGE_CODE }}";
-</script>
-{% cache 5000 default_frontend %}
-  {% webpack_asset 'default_frontend' %}
-{% endcache %}
+{% kolibri_language_globals %}
+{% webpack_asset 'default_frontend' %}
 {% kolibri_set_server_time %}
 <script type="text/javascript">
   {% cache 5000 js_urls %}
@@ -68,16 +67,19 @@
 </script>
 <!-- Bootstrapping the currently logged in user's session object into the page. -->
 {% kolibri_bootstrap_model 'session' 'SessionResource' kwargs_pk='current'%}
-{% cache 5000 base_assets %}
-  {% webpack_base_assets %}
-  {% webpack_base_async_assets %}
-  {% content_renderer_assets %}
-{% endcache %}
+{% webpack_base_assets %}
+{% webpack_base_async_assets %}
+{% content_renderer_assets %}
 {% endblock %}
 
 {% block content %}
 
 {% endblock %}
 
+{% else %}
+
+{% include 'kolibri/unsupported_browser.html' %}
+
+{% endif %}
 </body>
 </html>

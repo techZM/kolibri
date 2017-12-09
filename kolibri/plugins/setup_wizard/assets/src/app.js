@@ -1,18 +1,17 @@
-import KolibriModule from 'kolibri_module';
-
-import Vue from 'kolibri.lib.vue';
-
+import KolibriApp from 'kolibri_app';
 import RootVue from './views';
+import { initialState, mutations } from './state/store'; // attaching store to the root element
 
-class SetupWizardModule extends KolibriModule {
-  ready() {
-    this.vm = new Vue({
-      el: 'rootvue',
-      render: createElement => createElement(RootVue),
-    });
+class OnboardingApp extends KolibriApp {
+  get RootVue() {
+    return RootVue;
+  }
+  get initialState() {
+    return initialState;
+  }
+  get mutations() {
+    return mutations;
   }
 }
 
-const setupWizardModule = new SetupWizardModule();
-
-export { setupWizardModule as default };
+export default new OnboardingApp();

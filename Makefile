@@ -1,4 +1,5 @@
 REQUIREMENTS=requirements.txt
+REQUIREMENTS_CEXT=requirements/cext.txt
 
 .PHONY: help clean clean-pyc clean-build list test test-all coverage docs release sdist
 
@@ -11,7 +12,8 @@ help:
 	@echo "coverage - check code coverage quickly with the default Python"
 	@echo "docs - generate Sphinx HTML documentation, including API docs"
 	@echo "release - package and upload a release"
-	@echo "sdist - package"
+	@echo "dist - package"
+	@echo "writeversion - updates the kolibri/VERSION file"
 
 clean: clean-build clean-pyc clean-docs clean-static
 
@@ -19,6 +21,7 @@ clean-static:
 	yarn run clean
 
 clean-build:
+	rm -f kolibri/VERSION
 	rm -fr build/
 	rm -fr dist/
 	rm -fr dist-packages-cache/
@@ -28,6 +31,10 @@ clean-build:
 	rm -fr .cache
 	rm -r kolibri/dist/* || true # remove everything
 	git checkout -- kolibri/dist # restore __init__.py
+	rm -r kolibri/utils/build_config/* || true # remove everything
+	git checkout -- kolibri/utils/build_config # restore __init__.py
+	rm -r requirements.txt || true # remove requirements.txt
+	git checkout -- requirements.txt # restore requirements.txt
 
 clean-pyc:
 	find . -name '*.pyc' -exec rm -f {} +
@@ -35,11 +42,10 @@ clean-pyc:
 	find . -name '*~' -exec rm -f {} +
 
 clean-docs:
-	rm -f docs/py_modules/kolibri*rst
-	rm -f docs/py_modules/modules.rst
-	rm -f docs/kolibri*rst # old location
-	rm -f docs/modules.rst # old location
+	rm -f docs-developer/py_modules/kolibri*rst
+	rm -f docs-developer/py_modules/modules.rst
 	$(MAKE) -C docs clean
+	$(MAKE) -C docs-developer clean
 
 lint:
 	flake8 kolibri
@@ -58,29 +64,48 @@ coverage:
 	coverage run --source kolibri setup.py test
 	coverage report -m
 
-docs: clean-docs
-	sphinx-apidoc -d 10 -H "Python Reference" -o docs/py_modules/ kolibri kolibri/test kolibri/deployment/ kolibri/dist/
+docs-developer: clean-docs
+	sphinx-apidoc -d 10 -H "Python Reference" -o docs-developer/py_modules/ kolibri kolibri/test kolibri/deployment/ kolibri/dist/
+	$(MAKE) -C docs-developer html
+
+docs-user: clean-docs
 	$(MAKE) -C docs html
 
-release: clean assets
-	python setup.py sdist upload
-	python setup.py bdist_wheel upload
+docs: docs-user docs-developer
 
-staticdeps: clean
+release:
+	ls -l dist/
+	read "\nDo you want to upload everything in dist/*?\n\n CTRL+C to exit."
+	twine upload -s dist/*
+
+staticdeps:
+	rm -r kolibri/dist/* || true # remove everything
+	git checkout -- kolibri/dist # restore __init__.py
 	pip install -t kolibri/dist -r $(REQUIREMENTS)
+	python install_cexts.py --file $(REQUIREMENTS_CEXT) # pip install c extensions
 	rm -r kolibri/dist/*.dist-info  # pip installs from PyPI will complain if we have more than one dist-info directory.
 
 writeversion:
-	git describe --tags > kolibri/VERSION
+	python -c "import kolibri; print(kolibri.__version__)" > kolibri/VERSION
 
-dist: writeversion staticdeps assets compilemessages
+setrequirements:
+	rm -r requirements.txt || true # remove requirements.txt
+	git checkout -- requirements.txt # restore requirements.txt
+	python build_tools/customize_requirements.py
+
+buildconfig:
+	rm -r kolibri/utils/build_config/* || true # remove everything
+	git checkout -- kolibri/utils/build_config # restore __init__.py
+	python build_tools/customize_build.py
+
+dist: setrequirements writeversion staticdeps buildconfig assets compilemessages
 	pip install -r requirements/build.txt
 	python setup.py sdist --format=gztar,zip --static > /dev/null # silence the sdist output! Too noisy!
 	python setup.py bdist_wheel --static
 	ls -l dist
 
 pex: writeversion
-	ls dist/*.whl | while read whlfile; do pex $$whlfile --disable-cache -o dist/kolibri-`unzip -p $$whlfile kolibri/VERSION`.pex -m kolibri --python-shebang=/usr/bin/python; done
+	ls dist/*.whl | while read whlfile; do pex $$whlfile --disable-cache -o dist/kolibri-`cat kolibri/VERSION`.pex -m kolibri --python-shebang=/usr/bin/python; done
 
 makedocsmessages:
 	make -C docs/ gettext
@@ -95,7 +120,7 @@ compilemessages:
 syncmessages: ensurecrowdinclient uploadmessages downloadmessages distributefrontendmessages
 
 ensurecrowdinclient:
-	ls -l crowdin-cli.jar || wget https://crowdin.com/downloads/crowdin-cli.jar # make sure we have the official crowdin cli client
+	ls -l crowdin-cli.jar || wget https://storage.googleapis.com/le-downloads/crowdin-cli/crowdin-cli.jar # make sure we have the official crowdin cli client
 
 uploadmessages:
 	java -jar crowdin-cli.jar upload sources -b `git symbolic-ref HEAD | xargs basename`
@@ -111,22 +136,8 @@ dockerenvbuild: writeversion
 	docker image build -t learningequality/kolibri:$$(cat kolibri/VERSION) -t learningequality/kolibri:latest .
 
 dockerenvdist: writeversion
-	docker run -v $$PWD/dist:/kolibridist learningequality/kolibri:$$(cat kolibri/VERSION)
+	docker run --env-file ./env.list -v $$PWD/dist:/kolibridist learningequality/kolibri:$$(cat kolibri/VERSION)
 
-BUMPVERSION_CMD = bumpversion --current-version `python -m kolibri --version` $(PART_INCREMENT) --allow-dirty -m "new version" --no-commit --list
-
-minor_increment:
-	$(eval PART_INCREMENT = minor)
-	$(BUMPVERSION_CMD)
-
-patch_increment:
-	$(eval PART_INCREMENT = patch)
-	$(BUMPVERSION_CMD)
-
-release_phase_increment:
-	$(eval PART_INCREMENT = release_phase)
-	$(BUMPVERSION_CMD)
-
-release_number_increment:
-	$(eval PART_INCREMENT = release_number)
-	$(BUMPVERSION_CMD)
+kolibripippex:
+	git clone https://github.com/learningequality/pip.git
+	cd pip && python setup.py bdist_wheel && pex -m pip dist/*.whl -o kolibripip.pex && mv kolibripip.pex ../

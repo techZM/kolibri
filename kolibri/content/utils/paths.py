@@ -16,6 +16,8 @@ VALID_STORAGE_FILENAME = re.compile("[0-9a-f]{32}(-data)?\.[0-9a-z]+")
 # set of file extensions that should be considered zip files and allow access to internal files
 POSSIBLE_ZIPPED_FILE_EXTENSIONS = set([".perseus", ".zip", ".epub", ".epub3"])
 
+def get_content_file_name(obj):
+    return '{checksum}.{extension}'.format(checksum=obj.id, extension=obj.extension)
 
 # DISK PATHS
 
@@ -90,6 +92,14 @@ def get_content_storage_url(baseurl=None):
 def get_content_storage_remote_url(filename, baseurl=None):
     return "{}{}/{}/{}".format(get_content_storage_url(baseurl), filename[0], filename[1], filename)
 
+def get_channel_lookup_url(identifier=None, base_url=None):
+    studio_url = "/api/public/v1/channels"
+    if identifier:
+        studio_url += "/lookup/{}".format(identifier)
+    return urljoin(
+        base_url or settings.CENTRAL_CONTENT_DOWNLOAD_BASE_URL,
+        studio_url
+    )
 
 def get_content_storage_file_url(filename, baseurl=None):
     """

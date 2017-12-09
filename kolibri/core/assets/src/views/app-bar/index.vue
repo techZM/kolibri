@@ -7,38 +7,51 @@
     class="app-bar"
     @nav-icon-click="$emit('toggleSideNav')"
     :style="{ height: height + 'px' }">
+
+    <div>
+      <div class="app-bar-title-icon"></div>
+      {{ title }}
+    </div>
+
     <div slot="actions">
-      <slot name="app-bar-actions"/>
+      <slot name="app-bar-actions"></slot>
+
       <ui-button
-        v-if="isUserLoggedIn"
+        ref="userMenuButton"
         icon="person"
         type="primary"
         color="primary"
-        :ariaLabel="$tr('account')"
-        :has-dropdown="true"
-        ref="accountButton"
-        class="username-text">
-        <template v-if="windowSize.breakpoint > 2">
-          {{ username }}
-          <template v-if="isSuperuser">({{ $tr('superuser') }})</template>
-          <template v-if="isAdmin">({{ $tr('admin') }})</template>
-          <template v-if="isCoach">({{ $tr('coach') }})</template>
-        </template>
-        <ui-menu
-          slot="dropdown"
-          :options="accountMenuOptions"
-          @close="$refs.accountButton.closeDropdown()"
-          @select="optionSelected"
-        />
+        class="user-menu-button"
+        :ariaLabel="$tr('userMenu')"
+        @click="userMenuDropdownIsOpen = !userMenuDropdownIsOpen"
+      >
+        <template v-if="isUserLoggedIn">{{ username }}</template>
+        <mat-svg name="arrow_drop_down" category="navigation" />
       </ui-button>
-      <a v-else href="/user">
-        <ui-button
-          type="primary"
-          color="primary"
-          :ariaLabel="$tr('signIn')">
-          {{ $tr('signIn') }}
-        </ui-button>
-      </a>
+
+      <custom-ui-menu
+        v-show="userMenuDropdownIsOpen"
+        ref="userMenuDropdown"
+        class="user-menu-dropdown"
+        :options="userMenuOptions"
+        :raised="true"
+        :containFocus="true"
+        @select="optionSelected"
+        @close="userMenuDropdownIsOpen = false"
+      >
+        <template slot="header" v-if="isUserLoggedIn">
+          <div class="role">{{ $tr('role') }}</div>
+          <div v-if="isAdmin">{{ $tr('admin') }}</div>
+          <div v-else-if="isCoach">{{ $tr('coach') }}</div>
+          <div v-else-if="isLearner">{{ $tr('learner') }}</div>
+        </template>
+      </custom-ui-menu>
+
+      <language-switcher-modal
+        v-if="showLanguageModal"
+        @close="showLanguageModal = false"
+        class="override-ui-toolbar"
+      />
     </div>
   </ui-toolbar>
 
@@ -48,29 +61,35 @@
 <script>
 
   import { kolibriLogout } from 'kolibri.coreVue.vuex.actions';
-  import {
-    isUserLoggedIn,
-    isSuperuser,
-    isAdmin,
-    isCoach,
-    isLearner,
-  } from 'kolibri.coreVue.vuex.getters';
+  import { isUserLoggedIn, isAdmin, isCoach, isLearner } from 'kolibri.coreVue.vuex.getters';
   import responsiveWindow from 'kolibri.coreVue.mixins.responsiveWindow';
   import uiToolbar from 'keen-ui/src/UiToolbar';
   import uiIconButton from 'keen-ui/src/UiIconButton';
-  import uiMenu from 'keen-ui/src/UiMenu';
+  import customUiMenu from 'kolibri.coreVue.components.customUiMenu';
   import uiButton from 'keen-ui/src/UiButton';
+  import { redirectBrowser } from 'kolibri.utils.browser';
+  import languageSwitcherModal from '../language-switcher/modal';
   export default {
+    name: 'appBar',
+    components: {
+      uiToolbar,
+      uiIconButton,
+      customUiMenu,
+      uiButton,
+      languageSwitcherModal,
+    },
     mixins: [responsiveWindow],
-    $trNameSpace: 'appBar',
     $trs: {
       account: 'Account',
       profile: 'Profile',
-      signOut: 'Sign Out',
-      signIn: 'Sign In',
-      superuser: 'Device owner',
+      signOut: 'Sign out',
+      signIn: 'Sign in',
+      role: 'Role',
       admin: 'Admin',
       coach: 'Coach',
+      learner: 'Learner',
+      languageSwitchMenuOption: 'Change language',
+      userMenu: 'User menu',
     },
     props: {
       title: {
@@ -86,37 +105,63 @@
         required: true,
       },
     },
-    components: {
-      uiToolbar,
-      uiIconButton,
-      uiMenu,
-      uiButton,
-    },
+    data: () => ({
+      showLanguageModal: false,
+      userMenuDropdownIsOpen: false,
+    }),
     computed: {
-      accountMenuOptions() {
+      userMenuOptions() {
+        const changeLanguage = {
+          id: 'language',
+          label: this.$tr('languageSwitchMenuOption'),
+        };
+        if (this.isUserLoggedIn) {
+          return [
+            {
+              id: 'profile',
+              label: this.$tr('profile'),
+            },
+            changeLanguage,
+            {
+              id: 'signOut',
+              label: this.$tr('signOut'),
+            },
+          ];
+        }
         return [
           {
-            id: 'profile',
-            label: this.$tr('profile'),
+            id: 'signIn',
+            label: this.$tr('signIn'),
           },
-          {
-            id: 'signOut',
-            label: this.$tr('signOut'),
-          },
+          changeLanguage,
         ];
       },
     },
+    created() {
+      window.addEventListener('click', this.handleClick);
+    },
+    beforeDestroy() {
+      window.removeEventListener('click', this.handleClick);
+    },
     methods: {
       optionSelected(option) {
-        switch (option.id) {
-          case 'profile':
-            window.location = `/user`;
-            break;
-          case 'signOut':
-            this.kolibriLogout();
-            break;
-          default:
-            break;
+        if (option.id === 'profile') {
+          window.location = `/user`;
+        } else if (option.id === 'signOut') {
+          this.kolibriLogout();
+        } else if (option.id === 'signIn') {
+          redirectBrowser();
+        } else if (option.id === 'language') {
+          this.showLanguageModal = true;
+        }
+      },
+      handleClick(event) {
+        if (
+          !this.$refs.userMenuDropdown.$el.contains(event.target) &&
+          !this.$refs.userMenuButton.$el.contains(event.target) &&
+          this.userMenuDropdownIsOpen
+        ) {
+          this.userMenuDropdownIsOpen = false;
         }
       },
     },
@@ -125,7 +170,6 @@
       getters: {
         username: state => state.core.session.username,
         isUserLoggedIn,
-        isSuperuser,
         isAdmin,
         isCoach,
         isLearner,
@@ -136,12 +180,44 @@
 </script>
 
 
+<style lang="stylus">
+
+  @require '~kolibri.styles.definitions'
+
+  .override-ui-toolbar
+    color: $core-text-default
+
+</style>
+
+
 <style lang="stylus" scoped>
+
+  @require '~kolibri.styles.definitions'
 
   .app-bar
     overflow: hidden
 
-  .username-text
+  .user-menu-button
     text-transform: none
+    svg
+      fill: white
+
+  .user-menu-dropdown
+    position: fixed
+    right: 0
+    z-index: 8
+
+  .role
+    font-size: small
+    margin-bottom: 8px
+
+  // Will display icon in app bar if variables are defined
+  .app-bar-title-icon
+    background: $app-bar-title-icon
+    height: $app-bar-title-icon-height
+    width: $app-bar-title-icon-height
+    display: inline-block
+    vertical-align: middle
+    background-size: cover
 
 </style>

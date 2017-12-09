@@ -3,11 +3,12 @@
   <section
     class="pdf-page-container"
     :style="{ height: pageHeight + 'px', width: pageWidth + 'px' }">
-    <span class="pdf-page-loading"> {{ this.$formatNumber(this.pageNum) }}</span>
+    <span class="pdf-page-loading"> {{ $formatNumber(pageNum) }}</span>
     <canvas
       v-show="active"
       class="canvas"
       ref="canvas"
+      dir="ltr"
       :height="pageHeight"
       :width="pageWidth">
     </canvas>
@@ -43,11 +44,6 @@
       active: false,
       rendered: false,
     }),
-    watch: {
-      scale: 'renderPage',
-      active: 'renderPage',
-      pdfPage: 'renderPage',
-    },
     computed: {
       pageHeight() {
         return this.height || this.defaultHeight;
@@ -55,6 +51,11 @@
       pageWidth() {
         return this.width || this.defaultWidth;
       },
+    },
+    watch: {
+      scale: 'renderPage',
+      active: 'renderPage',
+      pdfPage: 'renderPage',
     },
     methods: {
       cancelRender() {

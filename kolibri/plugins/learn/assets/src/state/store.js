@@ -1,9 +1,7 @@
 import * as constants from '../constants';
-import Vuex from 'kolibri.lib.vuex';
-import * as coreStore from 'kolibri.coreVue.vuex.store';
 
-const initialState = {
-  pageName: constants.PageNames.EXPLORE_CHANNEL,
+export const initialState = {
+  pageName: constants.PageNames.TOPICS_CHANNEL,
   pageState: {
     topics: [],
     contents: [],
@@ -16,12 +14,15 @@ const initialState = {
   examAttemptLogs: {},
 };
 
-const mutations = {
+export const mutations = {
   SET_PAGE_NAME(state, name) {
     state.pageName = name;
   },
   SET_PAGE_STATE(state, pageState) {
     state.pageState = pageState;
+  },
+  SET_FEATURED_CHANNEL_CONTENTS(state, channelId, contents) {
+    state.pageState.featured[channelId] = contents;
   },
   SET_EXAM_LOG(state, examLog) {
     state.examLog = examLog;
@@ -49,14 +50,3 @@ const mutations = {
     });
   },
 };
-
-// assigns core state and mutations
-Object.assign(initialState, coreStore.initialState);
-Object.assign(mutations, coreStore.mutations);
-
-const store = new Vuex.Store({
-  state: initialState,
-  mutations,
-});
-
-export { store as default };

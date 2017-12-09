@@ -15,6 +15,7 @@ import os
 
 # import kolibri, so we can get the path to the module.
 import kolibri
+import pytz
 # we load other utilities related to i18n
 # This is essential! We load the kolibri conf INSIDE the Django conf
 from kolibri.utils import conf, i18n
@@ -57,9 +58,12 @@ INSTALLED_APPS = [
     'kolibri.content',
     'kolibri.logger',
     'kolibri.tasks.apps.KolibriTasksConfig',
+    'kolibri.core.deviceadmin',
     'kolibri.core.webpack',
     'kolibri.core.exams',
+    'kolibri.core.device',
     'kolibri.core.discovery',
+    'kolibri.core.analytics',
     'rest_framework',
     'django_js_reverse',
     'jsonfield',
@@ -75,11 +79,11 @@ LOCALE_PATHS += [
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'kolibri.core.device.middleware.KolibriLocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'kolibri.plugins.setup_wizard.middleware.SetupWizardMiddleware',
     'kolibri.auth.middleware.CustomAuthenticationMiddleware',
-    'kolibri.content.middleware.ContentDBRoutingMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -102,6 +106,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'kolibri.core.context_processors.custom_context_processor.return_session',
+                'kolibri.core.context_processors.custom_context_processor.supported_browser',
             ],
         },
     },
@@ -123,11 +128,6 @@ DATABASES = {
     },
 }
 
-# Enable dynamic routing for content databases
-DATABASE_ROUTERS = [
-    # note: the content db router seems to override any other routers you put in here. Make sure it's the last.
-    'kolibri.content.content_db_router.ContentDBRouter']
-
 # Content directories and URLs for channel metadata and content files
 
 # Directory and URL for storing content databases for channel data
@@ -141,24 +141,39 @@ if not os.path.exists(CONTENT_STORAGE_DIR):
     os.makedirs(CONTENT_STORAGE_DIR)
 
 # Base default URL for downloading content from an online server
-CENTRAL_CONTENT_DOWNLOAD_BASE_URL = "https://contentworkshop.learningequality.org"
+CENTRAL_CONTENT_DOWNLOAD_BASE_URL = "http://studio.learningequality.org"
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
+
+# For language names, see:
+# https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+# http://helpsharepointvision.nevron.com/Culture_Table.html
 
 LANGUAGES = [
     ('en', 'English'),
     ('sw-tz', 'Kiswahili'),
     ('es-es', 'Español'),
-    ('es-mx', 'Español (México)'),
-    ('fr-fr', 'Français, langue française'),
-    ('pt-pt', 'Português'),
-    ('hi-in', 'हिंदी')
+    ('fr-fr', 'Français'),
+    ('ar', 'العَرَبِيَّة‎‎'),
+    ('fa', 'فارسی'),
+    ('ur-pk', 'اُردو (پاکستان)‏'),
 ]
 
-LANGUAGE_CODE = conf.config.get("LANGUAGE_CODE") or "en-us"
+LANGUAGE_CODE = conf.config.get("LANGUAGE_CODE") or "en"
 
-TIME_ZONE = get_localzone().zone
+try:
+    TIME_ZONE = get_localzone().zone
+except pytz.UnknownTimeZoneError:
+    # Do not fail at this point because a timezone was not
+    # detected.
+    TIME_ZONE = pytz.utc.zone
+
+# Fixes https://github.com/regebro/tzlocal/issues/44
+# tzlocal 1.4 returns 'local' if unable to detect the timezone,
+# and this TZ id is invalid
+if TIME_ZONE == "local":
+    TIME_ZONE = pytz.utc.zone
 
 USE_I18N = True
 
@@ -219,6 +234,12 @@ LOGGING = {
             'class': 'django.utils.log.AdminEmailHandler',
             'filters': ['require_debug_false'],
         },
+        'request_debug': {
+            'level': 'ERROR',
+            'class': 'logging.StreamHandler',
+            'formatter': 'color',
+            'filters': ['require_debug_true'],
+        },
         'file_debug': {
             'level': 'DEBUG',
             'filters': ['require_debug_true'],
@@ -240,13 +261,18 @@ LOGGING = {
             'propagate': True,
         },
         'django.request': {
-            'handlers': ['mail_admins', 'file'],
+            'handlers': ['mail_admins', 'file', 'request_debug'],
             'level': 'ERROR',
             'propagate': False,
         },
         'kolibri': {
             'handlers': ['console', 'mail_admins', 'file', 'file_debug'],
             'level': 'INFO',
+        },
+        'iceqube': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
         }
     }
 }
@@ -255,9 +281,9 @@ LOGGING = {
 # Customizing Django auth system
 # https://docs.djangoproject.com/en/1.9/topics/auth/customizing/
 
-AUTH_USER_MODEL = 'kolibriauth.DeviceOwner'
+AUTH_USER_MODEL = 'kolibriauth.FacilityUser'
 
-AUTHENTICATION_BACKENDS = ['kolibri.auth.backends.DeviceOwnerBackend', 'kolibri.auth.backends.FacilityUserBackend']
+AUTHENTICATION_BACKENDS = ['kolibri.auth.backends.FacilityUserBackend']
 
 
 # Django REST Framework
@@ -284,3 +310,10 @@ JS_REVERSE_JS_VAR_NAME = 'kolibriUrls'
 JS_REVERSE_EXCLUDE_NAMESPACES = ['admin', ]
 
 ENABLE_DATA_BOOTSTRAPPING = True
+
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+SESSION_COOKIE_AGE = 600
+
+# morango specific settings
+MORANGO_JSON_SERIALIZER_CLASS = "kolibri.auth.encoders"

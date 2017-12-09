@@ -1,0 +1,16 @@
+
+ .wy-table-responsive table td {
+    /* !important prevents the common CSS stylesheets from overriding
+       this as on RTD they are loaded after this stylesheet */
+    white-space: normal !important;
+    vertical-align: top !important;
+ }
+
+
+/* Removes Edit On Github until there is a fix
+   for https://github.com/rtfd/readthedocs.org/issues/3203
+*/
+.wy-breadcrumbs li.wy-breadcrumbs-aside
+{
+    display: none;
+}

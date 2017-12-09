@@ -2,7 +2,7 @@
 
   <div>
 
-    <breadcrumbs/>
+    <breadcrumbs />
     <h1 v-if="!isRootLearnerPage">
       <content-icon
         :kind="pageState.contentScopeSummary.kind"
@@ -11,12 +11,12 @@
       {{ pageState.contentScopeSummary.title }}
     </h1>
     <report-subheading />
-
-    <report-table>
+    <p v-if="!standardDataTable.length" class="center-text"><strong>{{ $tr('noLearners') }}</strong></p>
+    <report-table v-else>
       <thead slot="thead">
         <tr>
           <header-cell
-            align="left"
+            :align="alignStart"
             :text="$tr('name')"
             :column="TableColumns.NAME"
             :sortable="true"
@@ -28,13 +28,13 @@
             :sortable="true"
           />
           <header-cell
-            align="left"
+            :align="alignStart"
             :text="$tr('group')"
             :column="TableColumns.GROUP"
             :sortable="true"
           />
           <header-cell
-            align="left"
+            :align="alignStart"
             v-if="!isRootLearnerPage"
             :text="$tr('lastActivity')"
             :column="TableColumns.DATE"
@@ -79,17 +79,11 @@
   import nameCell from './table-cells/name-cell';
   import progressCell from './table-cells/progress-cell';
   import activityCell from './table-cells/activity-cell';
+
+  import alignMixin from './align-mixin';
+
   export default {
-    $trNameSpace: 'learnerReportPage',
-    $trs: {
-      name: 'Name',
-      group: 'Group',
-      exerciseProgress: 'Exercise progress',
-      contentProgress: 'Resource progress',
-      lastActivity: 'Last activity',
-      exerciseCountText: '{count, number, integer} {count, plural, one {Exercise} other {Exercises}}',
-      contentCountText: '{count, number, integer} {count, plural, one {Resource} other {Resources}}',
-    },
+    name: 'learnerReportPage',
     components: {
       contentIcon,
       breadcrumbs,
@@ -99,6 +93,17 @@
       nameCell,
       progressCell,
       activityCell,
+    },
+    mixins: [alignMixin],
+    $trs: {
+      name: 'Name',
+      group: 'Group',
+      exerciseProgress: 'Exercise progress',
+      contentProgress: 'Resource progress',
+      lastActivity: 'Last activity',
+      exerciseCountText: '{count, number, integer} {count, plural, one {Exercise} other {Exercises}}',
+      contentCountText: '{count, number, integer} {count, plural, one {Resource} other {Resources}}',
+      noLearners: 'You do not have any learners registered yet',
     },
     computed: {
       isExercisePage() {
@@ -114,9 +119,10 @@
     methods: {
       genLink(row) {
         if (this.isExercisePage) {
-          const targetName = this.pageName === CoachConstants.PageNames.RECENT_LEARNERS_FOR_ITEM
-            ? CoachConstants.PageNames.RECENT_LEARNER_ITEM_DETAILS_ROOT
-            : CoachConstants.PageNames.TOPIC_LEARNER_ITEM_DETAILS_ROOT;
+          const targetName =
+            this.pageName === CoachConstants.PageNames.RECENT_LEARNERS_FOR_ITEM
+              ? CoachConstants.PageNames.RECENT_LEARNER_ITEM_DETAILS_ROOT
+              : CoachConstants.PageNames.TOPIC_LEARNER_ITEM_DETAILS_ROOT;
           return {
             name: targetName,
             params: {

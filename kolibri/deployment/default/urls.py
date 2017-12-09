@@ -22,6 +22,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from django.conf import settings
 from django.conf.urls import include, url
 from django.contrib import admin
+from morango import urls as morango_urls
 
 from .views import RootURLRedirectView
 
@@ -35,7 +36,9 @@ urlpatterns = [
     url(r'^api/', include('kolibri.logger.api_urls')),
     url(r'^api/', include('kolibri.tasks.api_urls')),
     url(r'^api/', include('kolibri.core.exams.api_urls')),
+    url(r'^api/', include('kolibri.core.device.api_urls')),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    url(r'', include(morango_urls)),
 ]
 
 if getattr(settings, 'DEBUG_PANEL_ACTIVE', False):
@@ -44,3 +47,8 @@ if getattr(settings, 'DEBUG_PANEL_ACTIVE', False):
     urlpatterns = [
         url(r'^__debug__/', include(debug_toolbar.urls)),
     ] + urlpatterns
+
+if getattr(settings, 'REST_SWAGGER', False):
+    urlpatterns += [
+        url(r'^api_explorer/', include('rest_framework_swagger.urls'))
+    ]

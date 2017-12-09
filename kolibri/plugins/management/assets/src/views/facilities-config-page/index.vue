@@ -1,6 +1,12 @@
 <template>
 
   <div>
+
+    <notifications
+      :notification="notification"
+      @dismiss="dismissNotification()"
+    />
+
     <div class="mb">
       <h1>{{ $tr('pageHeader') }}</h1>
       <p>{{ $tr('pageDescription') }}</p>
@@ -18,45 +24,35 @@
         <div class="settings">
           <h2>{{ $tr('settingsHeader') }}</h2>
           <template v-for="setting in settingsList">
-            <ui-checkbox
-              :name="setting"
-              :value="settings[setting]"
+            <k-checkbox
+              :label="$tr(setting)"
+              :checked="settings[setting]"
               @change="toggleSetting(setting)"
-              box-position="right"
-            >
-              {{ $tr(setting) }}
-            </ui-checkbox>
+              :key="setting"
+            />
           </template>
         </div>
 
         <div>
-          <ui-button
-            :ariaLabel="$tr('resetToDefaultSettings')"
+          <k-button
+            :primary="false"
+            appearance="raised-button"
             @click="showModal=true"
-            class="mr"
+            :text="$tr('resetToDefaultSettings')"
             name="reset-settings"
-          >
-            {{ $tr('resetToDefaultSettings') }}
-          </ui-button>
+          />
 
-          <span class="space"></span>
-
-          <ui-button
-            :ariaLabel="$tr('saveChanges')"
-            @click="saveFacilityConfig()"
-            color="primary"
+          <k-button
+            :primary="true"
+            appearance="raised-button"
+            @click="saveConfig()"
+            :text="$tr('saveChanges')"
             name="save-settings"
-          >
-            {{ $tr('saveChanges') }}
-          </ui-button>
+            :disabled="!settingsHaveChanged"
+          />
         </div>
       </div>
     </template>
-
-    <notifications
-      :notification="notification"
-      @dismiss="dismissNotification()"
-    />
 
     <confirm-reset-modal
       id="confirm-reset"
@@ -80,21 +76,43 @@
   ];
   import confirmResetModal from './confirm-reset-modal';
   import notifications from './config-page-notifications';
-  import uiCheckbox from 'keen-ui/src/UiCheckbox';
-  import uiButton from 'keen-ui/src/UiButton';
+  import kCheckbox from 'kolibri.coreVue.components.kCheckbox';
+  import kButton from 'kolibri.coreVue.components.kButton';
+  import isEqual from 'lodash/isEqual';
+
   export default {
+    name: 'facilityConfigPage',
     components: {
       confirmResetModal,
       notifications,
-      uiCheckbox,
-      uiButton,
+      kCheckbox,
+      kButton,
     },
-    data: () => ({ showModal: false }),
-    computed: { settingsList: () => settingsList },
+    data: () => ({
+      showModal: false,
+      settingsCopy: {},
+    }),
+    computed: {
+      settingsList: () => settingsList,
+      settingsHaveChanged() {
+        return !isEqual(this.settings, this.settingsCopy);
+      },
+    },
+    mounted() {
+      this.copySettings();
+    },
     methods: {
       resetToDefaultSettings() {
         this.showModal = false;
         this.resetFacilityConfig();
+      },
+      saveConfig() {
+        this.saveFacilityConfig().then(() => {
+          this.copySettings();
+        });
+      },
+      copySettings() {
+        this.settingsCopy = Object.assign({}, this.settings);
       },
     },
     vuex: {
@@ -117,17 +135,15 @@
         },
       },
     },
-    $trNameSpace: 'facilityConfigPage',
     $trs: {
       currentFacilityHeader: 'Your current Facility',
-      learnerCanDeleteAccount: 'Allow users to delete their account',
-      learnerCanEditName: 'Allow users to edit their full name',
-      learnerCanEditPassword: 'Allow users to change their password when signed in',
-      learnerCanEditUsername: 'Allow users to edit their username',
-      learnerCanSignUp: 'Allow users to sign-up on this device',
+      learnerCanEditName: 'Allow learners and coaches to edit their full name',
+      learnerCanEditPassword: 'Allow learners and coaches to change their password when signed in',
+      learnerCanEditUsername: 'Allow learners and coaches to edit their username',
+      learnerCanSignUp: 'Allow learners to sign-up on this device',
       learnerCanLoginWithNoPassword: 'Allow learners to sign in with no password',
       pageDescription: 'Configure and change different Facility settings here.',
-      pageHeader: 'Facility Configuration',
+      pageHeader: 'Facility Settings',
       resetToDefaultSettings: 'Reset to default settings',
       saveChanges: 'Save changes',
       settingsHeader: 'Facility Settings',
@@ -138,9 +154,6 @@
 
 
 <style lang="stylus" scoped>
-
-  .mr
-    margin-right: 5px
 
   .mb
     margin-bottom: 2rem

@@ -6,41 +6,21 @@ import os  # noqa
 import signal  # noqa
 import sys  # noqa
 
-# Do this before importing anything else, we need to add bundled requirements
-# from the distributed version in case it exists before importing anything
-# else.
-# TODO: Do we want to manage the path at an even more fundamental place like
-# kolibri.__init__ !? Load order will still matter...
+from . import env
+
+# Setup the environment before loading anything else from the application
+# TODO: This should perhaps be moved to kolibri.__init__
+env.set_env()
 
 import kolibri  # noqa
-from kolibri import dist as kolibri_dist  # noqa
-sys.path = sys.path + [
-    os.path.realpath(os.path.dirname(kolibri_dist.__file__))
-]
-
-# Set default env
-os.environ.setdefault(
-    "DJANGO_SETTINGS_MODULE", "kolibri.deployment.default.settings.base"
-)
-os.environ.setdefault(
-    "KOLIBRI_HOME", os.path.join(os.path.expanduser("~"), ".kolibri")
-)
-os.environ.setdefault("KOLIBRI_LISTEN_PORT", "8080")
-
 import django  # noqa
 from django.core.management import call_command  # noqa
 from docopt import docopt  # noqa
 
+from kolibri.core.deviceadmin.utils import IncompatibleDatabase  # noqa
+
 from . import server  # noqa
 from .system import become_daemon  # noqa
-
-# This was added in
-# https://github.com/learningequality/kolibri/pull/580
-# ...we need to (re)move it /benjaoming
-# Force python2 to interpret every string as unicode.
-if sys.version[0] == '2':
-    reload(sys)  # noqa
-    sys.setdefaultencoding('utf8')
 
 USAGE = """
 Kolibri
@@ -112,15 +92,20 @@ Auto-generated usage instructions from ``kolibri -h``::
 
 logger = logging.getLogger(__name__)
 
-KOLIBRI_HOME = os.environ['KOLIBRI_HOME']
-VERSION_FILE = os.path.join(KOLIBRI_HOME, '.data_version')
-
 
 class PluginDoesNotExist(Exception):
     """
     This exception is local to the CLI environment in case actions are performed
     on a plugin that cannot be loaded.
     """
+
+
+def version_file():
+    """
+    During test runtime, this path may differ because KOLIBRI_HOME is
+    regenerated
+    """
+    return os.path.join(os.environ['KOLIBRI_HOME'], '.data_version')
 
 
 def initialize(debug=False):
@@ -130,8 +115,7 @@ def initialize(debug=False):
 
     :param: debug: Tells initialization to setup logging etc.
     """
-
-    if not os.path.isfile(VERSION_FILE):
+    if not os.path.isfile(version_file()):
         django.setup()
 
         setup_logging(debug=debug)
@@ -143,9 +127,20 @@ def initialize(debug=False):
         from kolibri.utils.conf import autoremove_unavailable_plugins, enable_default_plugins
         autoremove_unavailable_plugins()
 
-        version = open(VERSION_FILE, "r").read()
-        change_version = kolibri.__version__ != version.strip()
+        version = open(version_file(), "r").read()
+        version = version.strip() if version else ""
+        change_version = kolibri.__version__ != version
         if change_version:
+            # Version changed, make a backup no matter what.
+            from kolibri.core.deviceadmin.utils import dbbackup
+            try:
+                backup = dbbackup(version)
+                logger.info(
+                    "Backed up database to: {path}".format(path=backup))
+            except IncompatibleDatabase:
+                logger.warning(
+                    "Skipped automatic database backup, not compatible with "
+                    "this DB engine.")
             enable_default_plugins()
 
         django.setup()
@@ -161,13 +156,21 @@ def initialize(debug=False):
             )
             update()
 
+def _migrate_databases():
+    """
+    Try to migrate all active databases. This should not be called unless Django has
+    been initialized.
+    """
+    from django.conf import settings
+    for database in settings.DATABASES:
+        call_command("migrate", interactive=False, database=database)
 
 def _first_run():
     """
     Called once at least. Will not run if the .kolibri/.version file is
     found.
     """
-    if os.path.exists(VERSION_FILE):
+    if os.path.exists(version_file()):
         logger.error(
             "_first_run() called, but Kolibri is already initialized."
         )
@@ -183,7 +186,7 @@ def _first_run():
     # We need to migrate the database before enabling plugins, because they
     # might depend on database readiness.
     if not SKIP_AUTO_DATABASE_MIGRATION:
-        call_command("migrate", interactive=False, database="default")
+        _migrate_databases()
 
     for plugin_module in DEFAULT_PLUGINS:
         try:
@@ -220,10 +223,13 @@ def update():
     from kolibri.core.settings import SKIP_AUTO_DATABASE_MIGRATION
 
     if not SKIP_AUTO_DATABASE_MIGRATION:
-        call_command("migrate", interactive=False, database="default")
+        _migrate_databases()
 
-    with open(VERSION_FILE, "w") as f:
+    with open(version_file(), "w") as f:
         f.write(kolibri.__version__)
+
+    from kolibri.content.utils.annotation import update_channel_metadata
+    update_channel_metadata()
 
 
 update.called = False
@@ -273,7 +279,8 @@ def start(port=None, daemon=True):
 
         kwargs = {}
         # Truncate the file
-        open(server.DAEMON_LOG, "w").truncate()
+        if os.path.isfile(server.DAEMON_LOG):
+            open(server.DAEMON_LOG, "w").truncate()
         logger.info(
             "Going to daemon mode, logging to {0}".format(server.DAEMON_LOG)
         )
@@ -383,8 +390,8 @@ def setup_logging(debug=False):
         settings.DEBUG = True
         LOGGING['handlers']['console']['level'] = 'DEBUG'
         LOGGING['loggers']['kolibri']['level'] = 'DEBUG'
+        logger.debug("Debug mode is on!")
     logging.config.dictConfig(LOGGING)
-    logger.debug("Debug mode is on!")
 
 
 def manage(cmd, args=[]):
@@ -579,7 +586,10 @@ def main(args=None):
     if arguments['start']:
         port = arguments['--port']
         port = int(port) if port else None
-        start(port, daemon=not arguments['--foreground'])
+        daemon = not arguments['--foreground']
+        if sys.platform == 'darwin':
+            daemon = False
+        start(port, daemon=daemon)
         return
 
     if arguments['stop']:

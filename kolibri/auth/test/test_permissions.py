@@ -6,12 +6,14 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from django.test import TestCase
 
-from .helpers import create_dummy_facility_data
+from kolibri.core.device.models import DevicePermissions
+
+from .helpers import create_dummy_facility_data, create_superuser
 
 from ..constants import role_kinds
 from ..errors import InvalidHierarchyRelationsArgument
 from ..filters import HierarchyRelationsFilter
-from ..models import DeviceOwner, Facility, FacilityDataset, Classroom, LearnerGroup, Role, Membership, FacilityUser, KolibriAnonymousUser
+from ..models import Facility, FacilityDataset, Classroom, LearnerGroup, Role, Membership, FacilityUser, KolibriAnonymousUser
 
 
 class ImproperUsageIsProperlyHandledTestCase(TestCase):
@@ -22,7 +24,7 @@ class ImproperUsageIsProperlyHandledTestCase(TestCase):
     def setUp(self):
         self.data1 = create_dummy_facility_data()
         self.data2 = create_dummy_facility_data()
-        self.device_owner = DeviceOwner.objects.create(username="boss")
+        self.superuser = self.data1["superuser"]
         self.anon_user = KolibriAnonymousUser()
 
     def test_that_checking_creation_perms_on_invalid_model_returns_false(self):
@@ -36,9 +38,6 @@ class ImproperUsageIsProperlyHandledTestCase(TestCase):
             self.data1["facility_admin"].get_roles_for(object())
         with self.assertRaises(ValueError):
             self.data1["facility_admin"].has_role_for([role_kinds.ADMIN], object())
-
-    def test_that_getting_roles_for_deviceowner_returns_false(self):
-        self.assertFalse(self.data1["facility_admin"].has_role_for_user([role_kinds.ADMIN], self.device_owner))
 
     def test_that_getting_roles_for_anonuser_returns_false(self):
         self.assertFalse(self.data1["facility_admin"].has_role_for_user([role_kinds.ADMIN], self.anon_user))
@@ -61,7 +60,7 @@ class FacilityDatasetPermissionsTestCase(TestCase):
     def setUp(self):
         self.data1 = create_dummy_facility_data()
         self.data2 = create_dummy_facility_data()
-        self.device_owner = DeviceOwner.objects.create(username="boss")
+        self.superuser = self.data1["superuser"]
         self.anon_user = KolibriAnonymousUser()
 
     def test_facility_users_and_anon_users_cannot_create_facility_dataset(self):
@@ -108,18 +107,18 @@ class FacilityDatasetPermissionsTestCase(TestCase):
         self.assertFalse(self.data1["learners_one_group"][0][0].can_delete(other_facility_dataset))
         self.assertFalse(self.data1["unattached_users"][0].can_delete(other_facility_dataset))
 
-    def test_device_owner_can_do_anything_to_a_facility_dataset(self):
-        """ DeviceOwner can do anything to a FacilityDataset """
+    def test_superuser_can_do_anything_to_a_facility_dataset(self):
+        """ superuser can do anything to a FacilityDataset """
 
         new_facility_data = {}
-        self.assertTrue(self.device_owner.can_create(FacilityDataset, new_facility_data))
+        self.assertTrue(self.superuser.can_create(FacilityDataset, new_facility_data))
 
         facility_dataset = self.data1["dataset"]
-        self.assertTrue(self.device_owner.can_read(facility_dataset))
-        self.assertTrue(self.device_owner.can_update(facility_dataset))
-        self.assertTrue(self.device_owner.can_delete(facility_dataset))
+        self.assertTrue(self.superuser.can_read(facility_dataset))
+        self.assertTrue(self.superuser.can_update(facility_dataset))
+        self.assertTrue(self.superuser.can_delete(facility_dataset))
 
-        self.assertSetEqual(set(FacilityDataset.objects.all()), set(self.device_owner.filter_readable(FacilityDataset.objects.all())))
+        self.assertSetEqual(set(FacilityDataset.objects.all()), set(self.superuser.filter_readable(FacilityDataset.objects.all())))
 
 
 class FacilityPermissionsTestCase(TestCase):
@@ -130,7 +129,7 @@ class FacilityPermissionsTestCase(TestCase):
     def setUp(self):
         self.data1 = create_dummy_facility_data()
         self.data2 = create_dummy_facility_data(allow_sign_ups=True)
-        self.device_owner = DeviceOwner.objects.create(username="boss")
+        self.superuser = self.data1["superuser"]
         self.anon_user = KolibriAnonymousUser()
 
     def test_facility_users_and_anon_users_cannot_create_facility(self):
@@ -157,10 +156,10 @@ class FacilityPermissionsTestCase(TestCase):
             self.assertFalse(user.can_read(other_facility))
             self.assertNotIn(other_facility, user.filter_readable(Facility.objects.all()))
 
-    def test_anon_users_cannot_read_facility(self):
-        """ KolibriAnonymousUser cannot read Facility objects """
-        self.assertFalse(self.anon_user.can_read(self.data1["facility"]))
-        self.assertNotIn(self.data1["facility"], self.anon_user.filter_readable(Facility.objects.all()))
+    def test_anon_users_can_read_facility(self):
+        """ KolibriAnonymousUser can now read Facility objects """
+        self.assertTrue(self.anon_user.can_read(self.data1["facility"]))
+        self.assertIn(self.data1["facility"], self.anon_user.filter_readable(Facility.objects.all()))
 
     def test_only_facility_admins_can_update_own_facility(self):
         """ The only FacilityUser who can update a Facility is a facility admin for that Facility """
@@ -196,34 +195,18 @@ class FacilityPermissionsTestCase(TestCase):
         self.assertFalse(self.data1["learners_one_group"][0][0].can_delete(other_facility))
         self.assertFalse(self.data1["unattached_users"][0].can_delete(other_facility))
 
-    def test_device_owner_can_do_anything_to_a_facility(self):
-        """ DeviceOwner can do anything to a Facility """
+    def test_superuser_can_do_anything_to_a_facility(self):
+        """ superuser can do anything to a Facility """
 
         new_facility_data = {"name": "Home"}
-        self.assertTrue(self.device_owner.can_create(Facility, new_facility_data))
+        self.assertTrue(self.superuser.can_create(Facility, new_facility_data))
 
         facility = self.data1["facility"]
-        self.assertTrue(self.device_owner.can_read(facility))
-        self.assertTrue(self.device_owner.can_update(facility))
-        self.assertTrue(self.device_owner.can_delete(facility))
+        self.assertTrue(self.superuser.can_read(facility))
+        self.assertTrue(self.superuser.can_update(facility))
+        self.assertTrue(self.superuser.can_delete(facility))
 
-        self.assertSetEqual(set(Facility.objects.all()), set(self.device_owner.filter_readable(Facility.objects.all())))
-
-    def test_anon_user_can_read_facilities_that_allow_sign_ups(self):
-        can_not_sign_up_facility = self.data1['facility']
-        can_sign_up_facility = self.data2['facility']
-
-        self.assertFalse(self.anon_user.can_read(can_not_sign_up_facility))
-        self.assertTrue(self.anon_user.can_read(can_sign_up_facility))
-
-    def test_anon_user_filters_facility_datasets_that_allow_sign_ups(self):
-        sign_ups = Facility.objects.filter(dataset__learner_can_sign_up=True)
-        filtered = self.anon_user.filter_readable(Facility.objects.all())
-        self.assertEqual(set(sign_ups), set(filtered))
-
-    def test_anon_user_can_only_read_facilities_that_allow_sign_ups(self):
-        self.assertFalse(self.anon_user.can_read(self.data2['classrooms'][0]))
-        self.assertFalse(self.anon_user.can_read(self.data2['learnergroups'][0][0]))
+        self.assertSetEqual(set(Facility.objects.all()), set(self.superuser.filter_readable(Facility.objects.all())))
 
 
 class ClassroomPermissionsTestCase(TestCase):
@@ -238,7 +221,7 @@ class ClassroomPermissionsTestCase(TestCase):
         self.other_classroom = self.data["classrooms"][1]
         self.own_classroom_coach = self.data["classroom_coaches"][0]
         self.own_classroom_admin = self.data["classroom_admins"][0]
-        self.device_owner = DeviceOwner.objects.create(username="boss")
+        self.superuser = self.data["superuser"]
         self.anon_user = KolibriAnonymousUser()
 
     def test_only_facility_admin_can_create_classroom(self):
@@ -292,15 +275,15 @@ class ClassroomPermissionsTestCase(TestCase):
         self.assertFalse(self.own_classroom_coach.can_delete(self.other_classroom))
         self.assertFalse(self.member.can_delete(self.other_classroom))
 
-    def test_device_owner_can_do_anything_to_a_classroom(self):
-        """ DeviceOwner can do anything to a Classroom """
+    def test_superuser_can_do_anything_to_a_classroom(self):
+        """ superuser can do anything to a Classroom """
         new_classroom_data = {"name": "Home", "parent": self.data["facility"]}
-        self.assertTrue(self.device_owner.can_create(Classroom, new_classroom_data))
-        self.assertTrue(self.device_owner.can_read(self.own_classroom))
-        self.assertTrue(self.device_owner.can_update(self.own_classroom))
-        self.assertTrue(self.device_owner.can_delete(self.own_classroom))
+        self.assertTrue(self.superuser.can_create(Classroom, new_classroom_data))
+        self.assertTrue(self.superuser.can_read(self.own_classroom))
+        self.assertTrue(self.superuser.can_update(self.own_classroom))
+        self.assertTrue(self.superuser.can_delete(self.own_classroom))
 
-        self.assertSetEqual(set(Classroom.objects.all()), set(self.device_owner.filter_readable(Classroom.objects.all())))
+        self.assertSetEqual(set(Classroom.objects.all()), set(self.superuser.filter_readable(Classroom.objects.all())))
 
 
 class LearnerGroupPermissionsTestCase(TestCase):
@@ -318,7 +301,7 @@ class LearnerGroupPermissionsTestCase(TestCase):
         self.own_classroom_admin = self.data["classroom_admins"][0]
         self.other_classroom_admin = self.data["classroom_admins"][1]
         self.other_classroom_coach = self.data["classroom_coaches"][1]
-        self.device_owner = DeviceOwner.objects.create(username="boss")
+        self.superuser = self.data["superuser"]
         self.anon_user = KolibriAnonymousUser()
 
     def test_facility_or_classroom_admins_or_classroom_coach_can_create_learnergroup(self):
@@ -368,15 +351,15 @@ class LearnerGroupPermissionsTestCase(TestCase):
         self.assertFalse(self.own_classroom_coach.can_delete(self.other_learnergroup))
         self.assertFalse(self.member.can_delete(self.other_learnergroup))
 
-    def test_device_owner_can_do_anything_to_a_learnergroup(self):
-        """ DeviceOwner can do anything to a LearnerGroup """
+    def test_superuser_can_do_anything_to_a_learnergroup(self):
+        """ superuser can do anything to a LearnerGroup """
         new_learnergroup_data = {"name": "Cool Group", "parent": self.own_classroom}
-        self.assertTrue(self.device_owner.can_create(LearnerGroup, new_learnergroup_data))
-        self.assertTrue(self.device_owner.can_read(self.own_learnergroup))
-        self.assertTrue(self.device_owner.can_update(self.own_learnergroup))
-        self.assertTrue(self.device_owner.can_delete(self.own_learnergroup))
+        self.assertTrue(self.superuser.can_create(LearnerGroup, new_learnergroup_data))
+        self.assertTrue(self.superuser.can_read(self.own_learnergroup))
+        self.assertTrue(self.superuser.can_update(self.own_learnergroup))
+        self.assertTrue(self.superuser.can_delete(self.own_learnergroup))
 
-        self.assertSetEqual(set(LearnerGroup.objects.all()), set(self.device_owner.filter_readable(LearnerGroup.objects.all())))
+        self.assertSetEqual(set(LearnerGroup.objects.all()), set(self.superuser.filter_readable(LearnerGroup.objects.all())))
 
 
 class FacilityUserPermissionsTestCase(TestCase):
@@ -395,7 +378,7 @@ class FacilityUserPermissionsTestCase(TestCase):
         self.own_classroom_coach = self.data["classroom_coaches"][0]
         self.own_classroom_admin = self.data["classroom_admins"][0]
         self.other_classroom_admin = self.data["classroom_admins"][1]
-        self.device_owner = DeviceOwner.objects.create(username="boss")
+        self.superuser = self.data["superuser"]
         self.anon_user = KolibriAnonymousUser()
 
     def test_only_facility_admins_can_create_facility_user(self):
@@ -476,12 +459,12 @@ class FacilityUserPermissionsTestCase(TestCase):
         self.assertFalse(self.member.can_update(orphan))
         self.assertFalse(self.anon_user.can_update(orphan))
 
-    def test_facility_user_can_delete_self(self):
-        """ A FacilityUser can delete its own FacilityUser model """
-        self.assertTrue(self.member.can_delete(self.member))
-        self.assertTrue(self.own_classroom_coach.can_delete(self.own_classroom_coach))
-        self.assertTrue(self.own_classroom_admin.can_delete(self.own_classroom_admin))
-        self.assertTrue(self.data["facility_admin"].can_delete(self.data["facility_admin"]))
+    def test_facility_user_cannot_delete_self(self):
+        """ A FacilityUser cannot delete its own FacilityUser model """
+        self.assertFalse(self.member.can_delete(self.member))
+        self.assertFalse(self.own_classroom_coach.can_delete(self.own_classroom_coach))
+        self.assertFalse(self.own_classroom_admin.can_delete(self.own_classroom_admin))
+        self.assertFalse(self.data["facility_admin"].can_delete(self.data["facility_admin"]))
 
     def test_only_facility_admins_can_delete_facility_user(self):
         """ The only FacilityUsers who can delete a FacilityUser are admins for the Facility """
@@ -499,22 +482,26 @@ class FacilityUserPermissionsTestCase(TestCase):
         self.assertFalse(self.own_classroom_coach.can_delete(self.member2))
         self.assertFalse(self.member.can_delete(self.member2))
 
-    def test_device_owner_can_do_anything_to_a_facility_user(self):
-        """ DeviceOwner can do anything to a FacilityUser """
+    def test_superuser_can_do_anything_to_a_facility_user(self):
+        """ superuser can do anything to a FacilityUser """
         new_facilityuser_data_1 = {"username": "janedoe", "password": "*", "facility": self.data["facility"]}
-        self.assertTrue(self.device_owner.can_create(FacilityUser, new_facilityuser_data_1))
+        self.assertTrue(self.superuser.can_create(FacilityUser, new_facilityuser_data_1))
         new_facilityuser_data_2 = {"username": "janedoe", "password": "*", "facility": self.data2["facility"]}
-        self.assertTrue(self.device_owner.can_create(FacilityUser, new_facilityuser_data_2))
-        self.assertTrue(self.device_owner.can_read(self.member))
-        self.assertTrue(self.device_owner.can_update(self.member))
-        self.assertTrue(self.device_owner.can_delete(self.member))
+        self.assertTrue(self.superuser.can_create(FacilityUser, new_facilityuser_data_2))
+        self.assertTrue(self.superuser.can_read(self.member))
+        self.assertTrue(self.superuser.can_update(self.member))
+        self.assertTrue(self.superuser.can_delete(self.member))
 
-        self.assertSetEqual(set(FacilityUser.objects.all()), set(self.device_owner.filter_readable(FacilityUser.objects.all())))
+        self.assertSetEqual(set(FacilityUser.objects.all()), set(self.superuser.filter_readable(FacilityUser.objects.all())))
+
+    def test_superuser_cannot_delete_self(self):
+        """ superuser can't delete themselves """
+        self.assertFalse(self.superuser.can_delete(self.superuser))
 
 
-class DeviceOwnerPermissionsTestCase(TestCase):
+class SuperuserPermissionsTestCase(TestCase):
     """
-    Tests of permissions for reading/modifying DeviceOwner instances
+    Tests of permissions for reading/modifying superuser permissions
     """
 
     def setUp(self):
@@ -522,64 +509,61 @@ class DeviceOwnerPermissionsTestCase(TestCase):
         self.member = self.data["learners_one_group"][0][0]
         self.own_classroom_coach = self.data["classroom_coaches"][0]
         self.own_classroom_admin = self.data["classroom_admins"][0]
-        self.device_owner = DeviceOwner.objects.create(username="boss")
-        self.device_owner2 = DeviceOwner.objects.create(username="ubermensch")
+        self.superuser = self.data["superuser"]
+        self.superuser2 = create_superuser(self.data["facility"], username="ubermensch")
         self.anon_user = KolibriAnonymousUser()
 
-    def test_non_device_owners_cannot_create_device_owner(self):
-        """ Users who are not DeviceOwners cannot create a DeviceOwner """
-        new_deviceowner_data = {"username": "janedoe", "password": "*"}
-        self.assertFalse(self.data["facility_admin"].can_create(DeviceOwner, new_deviceowner_data))
-        self.assertFalse(self.data["facility_coach"].can_create(DeviceOwner, new_deviceowner_data))
-        self.assertFalse(self.own_classroom_admin.can_create(DeviceOwner, new_deviceowner_data))
-        self.assertFalse(self.own_classroom_coach.can_create(DeviceOwner, new_deviceowner_data))
-        self.assertFalse(self.member.can_create(DeviceOwner, new_deviceowner_data))
-        self.assertFalse(self.data["unattached_users"][0].can_create(DeviceOwner, new_deviceowner_data))
-        self.assertFalse(self.anon_user.can_create(DeviceOwner, new_deviceowner_data))
+    def test_non_superusers_cannot_create_superuser(self):
+        """ Users who are not Superusers cannot create a DevicePermissions """
+        new_devicepermission_data = {"user_id": self.data["facility_admin"].id, "is_superuser": True}
+        self.assertFalse(self.data["facility_admin"].can_create(DevicePermissions, new_devicepermission_data))
+        self.assertFalse(self.data["facility_coach"].can_create(DevicePermissions, new_devicepermission_data))
+        self.assertFalse(self.own_classroom_admin.can_create(DevicePermissions, new_devicepermission_data))
+        self.assertFalse(self.own_classroom_coach.can_create(DevicePermissions, new_devicepermission_data))
+        self.assertFalse(self.member.can_create(DevicePermissions, new_devicepermission_data))
+        self.assertFalse(self.data["unattached_users"][0].can_create(DevicePermissions, new_devicepermission_data))
+        self.assertFalse(self.anon_user.can_create(DevicePermissions, new_devicepermission_data))
 
-    def test_non_device_owners_cannot_read_device_owner(self):
-        """ Users who are not DeviceOwners cannot read a DeviceOwner """
+    def test_non_superusers_cannot_read_devicepermission(self):
+        """ Users who are not superusers cannot read DevicePermission """
         for user in [self.data["facility_admin"], self.data["facility_coach"], self.own_classroom_admin,
                      self.own_classroom_coach, self.member, self.data["unattached_users"][0], self.anon_user]:
-            self.assertFalse(user.can_read(self.device_owner))
-            self.assertEqual(len(user.filter_readable(DeviceOwner.objects.all())), 0)
+            self.assertFalse(user.can_read(self.superuser.devicepermissions))
+            self.assertEqual(len(user.filter_readable(DevicePermissions.objects.all())), 0)
 
-    def test_non_device_owners_cannot_update_device_owner(self):
-        """ Users who are not DeviceOwners cannot update a DeviceOwner """
-        self.assertFalse(self.data["facility_admin"].can_update(self.device_owner))
-        self.assertFalse(self.data["facility_coach"].can_update(self.device_owner))
-        self.assertFalse(self.own_classroom_admin.can_update(self.device_owner))
-        self.assertFalse(self.own_classroom_coach.can_update(self.device_owner))
-        self.assertFalse(self.member.can_update(self.device_owner))
-        self.assertFalse(self.data["unattached_users"][0].can_update(self.device_owner))
-        self.assertFalse(self.anon_user.can_update(self.device_owner))
+    def test_non_superusers_cannot_update_devicepermissions(self):
+        """ Users who are not superuser cannot update DevicePermission """
+        self.assertFalse(self.data["facility_admin"].can_update(self.superuser.devicepermissions))
+        self.assertFalse(self.data["facility_coach"].can_update(self.superuser.devicepermissions))
+        self.assertFalse(self.own_classroom_admin.can_update(self.superuser.devicepermissions))
+        self.assertFalse(self.own_classroom_coach.can_update(self.superuser.devicepermissions))
+        self.assertFalse(self.member.can_update(self.superuser.devicepermissions))
+        self.assertFalse(self.data["unattached_users"][0].can_update(self.superuser.devicepermissions))
+        self.assertFalse(self.anon_user.can_update(self.superuser.devicepermissions))
 
-    def test_non_device_owners_cannot_delete_device_owner(self):
-        """ Users who are not DeviceOwners cannot delete a DeviceOwner """
-        self.assertFalse(self.data["facility_admin"].can_delete(self.device_owner))
-        self.assertFalse(self.data["facility_coach"].can_delete(self.device_owner))
-        self.assertFalse(self.own_classroom_admin.can_delete(self.device_owner))
-        self.assertFalse(self.own_classroom_coach.can_delete(self.device_owner))
-        self.assertFalse(self.member.can_delete(self.device_owner))
-        self.assertFalse(self.data["unattached_users"][0].can_delete(self.device_owner))
-        self.assertFalse(self.anon_user.can_delete(self.device_owner))
+    def test_non_superusers_cannot_delete_devicepermissions(self):
+        """ Users who are not superusers cannot delete a DevicePermission """
+        self.assertFalse(self.data["facility_admin"].can_delete(self.superuser.devicepermissions))
+        self.assertFalse(self.data["facility_coach"].can_delete(self.superuser.devicepermissions))
+        self.assertFalse(self.own_classroom_admin.can_delete(self.superuser.devicepermissions))
+        self.assertFalse(self.own_classroom_coach.can_delete(self.superuser.devicepermissions))
+        self.assertFalse(self.member.can_delete(self.superuser.devicepermissions))
+        self.assertFalse(self.data["unattached_users"][0].can_delete(self.superuser.devicepermissions))
+        self.assertFalse(self.anon_user.can_delete(self.superuser.devicepermissions))
 
-    def test_device_owner_can_do_anything_to_a_device_owner(self):
-        """ DeviceOwner can do anything to a DeviceOwner """
+    def test_superuser_can_do_anything_to_other_devicepermission(self):
+        """ Superuser can do anything to DevicePermissions """
 
-        new_deviceowner_data = {"username": "janedoe", "password": "*"}
-        self.assertTrue(self.device_owner.can_create(DeviceOwner, new_deviceowner_data))
+        new_devicepermission_data = {"user_id": self.data["facility_admin"].id, "is_superuser": True}
+        self.assertTrue(self.superuser.can_create(DevicePermissions, new_devicepermission_data))
 
-        self.assertTrue(self.device_owner.can_read(self.device_owner))
-        self.assertTrue(self.device_owner.can_update(self.device_owner))
-        self.assertTrue(self.device_owner.can_delete(self.device_owner))
+        self.assertTrue(self.superuser.can_read(self.superuser.devicepermissions))
+        self.assertFalse(self.superuser.can_update(self.superuser.devicepermissions))
+        self.assertFalse(self.superuser.can_delete(self.superuser.devicepermissions))
 
-        self.assertTrue(self.device_owner.can_read(self.device_owner2))
-        self.assertTrue(self.device_owner.can_update(self.device_owner2))
-        self.assertTrue(self.device_owner.can_delete(self.device_owner2))
-
-        self.assertIn(self.device_owner, self.device_owner.filter_readable(DeviceOwner.objects.all()))
-        self.assertIn(self.device_owner2, self.device_owner.filter_readable(DeviceOwner.objects.all()))
+        self.assertTrue(self.superuser.can_read(self.superuser2.devicepermissions))
+        self.assertTrue(self.superuser.can_update(self.superuser2.devicepermissions))
+        self.assertTrue(self.superuser.can_delete(self.superuser2.devicepermissions))
 
 
 class RolePermissionsTestCase(TestCase):
@@ -596,7 +580,7 @@ class RolePermissionsTestCase(TestCase):
         self.own_classroom_admin = self.data["classroom_admins"][0]
         self.other_classroom_coach = self.data["classroom_coaches"][1]
         self.other_classroom_admin = self.data["classroom_admins"][1]
-        self.device_owner = DeviceOwner.objects.create(username="boss")
+        self.superuser = self.data["superuser"]
         self.role_user = self.data["unattached_users"][0]
         self.anon_user = KolibriAnonymousUser()
 
@@ -608,7 +592,7 @@ class RolePermissionsTestCase(TestCase):
         self.assertFalse(self.own_classroom_coach.can_create(Role, new_role_data))
         self.assertFalse(self.member.can_create(Role, new_role_data))
         self.assertFalse(self.role_user.can_create(Role, new_role_data))
-        self.assertTrue(self.device_owner.can_create(Role, new_role_data))
+        self.assertTrue(self.superuser.can_create(Role, new_role_data))
 
     def test_facility_admin_can_create_facility_coach_role(self):
         new_role_data = {"user": self.role_user, "collection": self.data["facility"], "kind": role_kinds.COACH}
@@ -618,7 +602,7 @@ class RolePermissionsTestCase(TestCase):
         self.assertFalse(self.own_classroom_coach.can_create(Role, new_role_data))
         self.assertFalse(self.member.can_create(Role, new_role_data))
         self.assertFalse(self.role_user.can_create(Role, new_role_data))
-        self.assertTrue(self.device_owner.can_create(Role, new_role_data))
+        self.assertTrue(self.superuser.can_create(Role, new_role_data))
         self.assertFalse(self.anon_user.can_create(Role, new_role_data))
 
     def test_facility_or_classroom_admin_can_create_classroom_admin_role(self):
@@ -631,7 +615,7 @@ class RolePermissionsTestCase(TestCase):
         self.assertFalse(self.other_classroom_coach.can_create(Role, new_role_data))
         self.assertFalse(self.member.can_create(Role, new_role_data))
         self.assertFalse(self.role_user.can_create(Role, new_role_data))
-        self.assertTrue(self.device_owner.can_create(Role, new_role_data))
+        self.assertTrue(self.superuser.can_create(Role, new_role_data))
         self.assertFalse(self.anon_user.can_create(Role, new_role_data))
 
     def test_facility_or_classroom_admin_can_create_classroom_coach_role(self):
@@ -644,12 +628,12 @@ class RolePermissionsTestCase(TestCase):
         self.assertFalse(self.other_classroom_coach.can_create(Role, new_role_data))
         self.assertFalse(self.member.can_create(Role, new_role_data))
         self.assertFalse(self.role_user.can_create(Role, new_role_data))
-        self.assertTrue(self.device_owner.can_create(Role, new_role_data))
+        self.assertTrue(self.superuser.can_create(Role, new_role_data))
         self.assertFalse(self.anon_user.can_create(Role, new_role_data))
 
     def test_facility_admin_or_coach_can_read_facility_admin_role(self):
         role = Role.objects.create(user=self.role_user, collection=self.data["facility"], kind=role_kinds.ADMIN)
-        for user in [self.data["facility_admin"], self.data["facility_coach"], self.role_user, self.device_owner]:
+        for user in [self.data["facility_admin"], self.data["facility_coach"], self.role_user, self.superuser]:
             self.assertTrue(user.can_read(role))
             self.assertIn(role, user.filter_readable(Role.objects.all()))
         for user in [self.own_classroom_admin, self.own_classroom_coach, self.other_classroom_admin,
@@ -667,7 +651,7 @@ class RolePermissionsTestCase(TestCase):
         self.assertFalse(self.other_classroom_coach.can_read(role))
         self.assertFalse(self.member.can_read(role))
         self.assertTrue(self.role_user.can_read(role))
-        self.assertTrue(self.device_owner.can_read(role))
+        self.assertTrue(self.superuser.can_read(role))
         self.assertFalse(self.anon_user.can_read(role))
 
     def test_facility_users_cannot_update_roles(self):
@@ -692,7 +676,7 @@ class RolePermissionsTestCase(TestCase):
         self.assertFalse(self.own_classroom_coach.can_delete(role))
         self.assertFalse(self.member.can_delete(role))
         self.assertTrue(self.role_user.can_delete(role))
-        self.assertTrue(self.device_owner.can_delete(role))
+        self.assertTrue(self.superuser.can_delete(role))
         self.assertFalse(self.anon_user.can_delete(role))
 
     def test_facility_admin_can_delete_facility_coach_role(self):
@@ -703,7 +687,7 @@ class RolePermissionsTestCase(TestCase):
         self.assertFalse(self.own_classroom_coach.can_delete(role))
         self.assertFalse(self.member.can_delete(role))
         self.assertFalse(self.role_user.can_delete(role))
-        self.assertTrue(self.device_owner.can_delete(role))
+        self.assertTrue(self.superuser.can_delete(role))
         self.assertFalse(self.anon_user.can_delete(role))
 
     def test_facility_or_classroom_admin_can_delete_classroom_admin_role(self):
@@ -716,7 +700,7 @@ class RolePermissionsTestCase(TestCase):
         self.assertFalse(self.other_classroom_coach.can_delete(role))
         self.assertFalse(self.member.can_delete(role))
         self.assertTrue(self.role_user.can_delete(role))  # the role's user can delete it as she is an admin for collection
-        self.assertTrue(self.device_owner.can_delete(role))
+        self.assertTrue(self.superuser.can_delete(role))
         self.assertFalse(self.anon_user.can_delete(role))
 
     def test_facility_or_classroom_admin_can_delete_classroom_coach_role(self):
@@ -729,7 +713,7 @@ class RolePermissionsTestCase(TestCase):
         self.assertFalse(self.other_classroom_coach.can_delete(role))
         self.assertFalse(self.member.can_delete(role))
         self.assertFalse(self.role_user.can_delete(role))
-        self.assertTrue(self.device_owner.can_delete(role))
+        self.assertTrue(self.superuser.can_delete(role))
         self.assertFalse(self.anon_user.can_delete(role))
 
 
@@ -749,7 +733,7 @@ class MembershipPermissionsTestCase(TestCase):
         self.own_classroom_admin = self.data["classroom_admins"][0]
         self.other_classroom_coach = self.data["classroom_coaches"][1]
         self.other_classroom_admin = self.data["classroom_admins"][1]
-        self.device_owner = DeviceOwner.objects.create(username="boss")
+        self.superuser = self.data["superuser"]
         self.anon_user = KolibriAnonymousUser()
 
     def test_admin_or_coach_for_user_can_create_membership(self):
@@ -762,12 +746,12 @@ class MembershipPermissionsTestCase(TestCase):
         self.assertFalse(self.other_classroom_admin.can_create(Membership, new_membership_data))
         self.assertFalse(self.other_classroom_coach.can_create(Membership, new_membership_data))
         self.assertFalse(self.member.can_create(Membership, new_membership_data))
-        self.assertTrue(self.device_owner.can_create(Membership, new_membership_data))
+        self.assertTrue(self.superuser.can_create(Membership, new_membership_data))
         self.assertFalse(self.anon_user.can_create(Membership, new_membership_data))
 
     def test_facility_or_classroom_admin_or_coach_or_member_can_read_membership(self):
         membership = Membership.objects.get(user=self.member, collection=self.own_learnergroup)
-        for user in [self.data["facility_admin"], self.own_classroom_admin, self.member, self.device_owner]:
+        for user in [self.data["facility_admin"], self.own_classroom_admin, self.member, self.superuser]:
             self.assertTrue(user.can_read(membership))
             self.assertIn(membership, user.filter_readable(Membership.objects.all()))
         for user in [self.data["facility_coach"], self.own_classroom_coach]:
@@ -795,18 +779,13 @@ class MembershipPermissionsTestCase(TestCase):
         self.assertTrue(self.own_classroom_admin.can_delete(membership))
         self.assertTrue(self.own_classroom_coach.can_delete(membership))
         self.assertFalse(self.member.can_delete(membership))
-        self.assertTrue(self.device_owner.can_delete(membership))
+        self.assertTrue(self.superuser.can_delete(membership))
         self.assertFalse(self.anon_user.can_delete(membership))
 
 class FacilityDatasetCertificateNamespacingTestCase(TestCase):
 
-    def test_unsaved_facility_permission_check_and_validation_only_create_one_dataset(self):
-        device_owner = DeviceOwner.objects.create(username="bossman")
-        anon_user = KolibriAnonymousUser()
+    def test_unsaved_facility_validation_only_create_one_dataset(self):
         facility = Facility(name="Hello!")
-        self.assertTrue(anon_user.can_create_instance(facility))
-        self.assertEqual(FacilityDataset.objects.count(), 0)
-        self.assertTrue(device_owner.can_create_instance(facility))
         self.assertEqual(FacilityDataset.objects.count(), 0)
         facility.full_clean()
         self.assertEqual(FacilityDataset.objects.count(), 0)

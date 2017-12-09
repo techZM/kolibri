@@ -13,10 +13,23 @@ import ConditionalPromise from 'kolibri.lib.conditionalPromise';
 import router from 'kolibri.coreVue.router';
 import * as CoreActions from 'kolibri.coreVue.vuex.actions';
 import { ContentNodeKinds, CollectionKinds } from 'kolibri.coreVue.vuex.constants';
-import * as Constants from '../../constants';
+import { PageNames } from '../../constants';
+import { EXAM_MODIFICATION_SNACKBAR } from '../../examConstants';
 import { setClassState } from './main';
 import { createQuestionList, selectQuestionFromExercise } from 'kolibri.utils.exams';
 import { assessmentMetaDataState } from 'kolibri.coreVue.vuex.mappers';
+import { createTranslator } from 'kolibri.utils.i18n';
+
+const name = 'coachExamPageTitles';
+
+const messages = {
+  coachExamListPageTitle: 'Exams',
+  coachExamCreationPageTitle: 'Create new exam',
+  coachExamReportPageTitle: 'Exam Report',
+  coachExamReportDetailPageTitle: 'Exam Report Detail',
+};
+
+const translator = createTranslator(name, messages);
 
 const pickIdAndName = pick(['id', 'name']);
 
@@ -24,7 +37,7 @@ function _channelState(channel) {
   return {
     id: channel.id,
     name: channel.name,
-    rootPk: channel.root_pk,
+    rootPk: channel.root,
   };
 }
 
@@ -127,7 +140,7 @@ function displayExamModal(store, modalName) {
 
 function showExamsPage(store, classId) {
   store.dispatch('CORE_SET_PAGE_LOADING', true);
-  store.dispatch('SET_PAGE_NAME', Constants.PageNames.EXAMS);
+  store.dispatch('SET_PAGE_NAME', PageNames.EXAMS);
 
   const promises = [
     LearnerGroupResource.getCollection({ parent: classId }).fetch(),
@@ -144,11 +157,12 @@ function showExamsPage(store, classId) {
         currentClassGroups: learnerGroups.map(pickIdAndName),
         exams: _examsState(exams),
         examModalShown: false,
+        busy: false,
       };
 
       store.dispatch('SET_PAGE_STATE', pageState);
       store.dispatch('CORE_SET_ERROR', null);
-      store.dispatch('CORE_SET_TITLE', Constants.PageTitles.EXAMS);
+      store.dispatch('CORE_SET_TITLE', translator.$tr('coachExamListPageTitle'));
       store.dispatch('CORE_SET_PAGE_LOADING', false);
     },
     error => CoreActions.handleError(store, error)
@@ -156,31 +170,35 @@ function showExamsPage(store, classId) {
 }
 
 function activateExam(store, examId) {
-  ExamResource.getModel(examId).save({ active: true }).then(
-    () => {
-      const exams = store.state.pageState.exams;
-      const examIndex = exams.findIndex(exam => exam.id === examId);
-      exams[examIndex].active = true;
+  ExamResource.getModel(examId)
+    .save({ active: true })
+    .then(
+      () => {
+        const exams = store.state.pageState.exams;
+        const examIndex = exams.findIndex(exam => exam.id === examId);
+        exams[examIndex].active = true;
 
-      store.dispatch('SET_EXAMS', exams);
-      displayExamModal(store, false);
-    },
-    error => CoreActions.handleError(store, error)
-  );
+        store.dispatch('SET_EXAMS', exams);
+        displayExamModal(store, false);
+      },
+      error => CoreActions.handleError(store, error)
+    );
 }
 
 function deactivateExam(store, examId) {
-  ExamResource.getModel(examId).save({ active: false }).then(
-    () => {
-      const exams = store.state.pageState.exams;
-      const examIndex = exams.findIndex(exam => exam.id === examId);
-      exams[examIndex].active = false;
+  ExamResource.getModel(examId)
+    .save({ active: false })
+    .then(
+      () => {
+        const exams = store.state.pageState.exams;
+        const examIndex = exams.findIndex(exam => exam.id === examId);
+        exams[examIndex].active = false;
 
-      store.dispatch('SET_EXAMS', exams);
-      displayExamModal(store, false);
-    },
-    error => CoreActions.handleError(store, error)
-  );
+        store.dispatch('SET_EXAMS', exams);
+        displayExamModal(store, false);
+      },
+      error => CoreActions.handleError(store, error)
+    );
 }
 
 function _assignExamTo(examId, collection) {
@@ -204,6 +222,7 @@ function _removeAssignment(assignmentId) {
 }
 
 function updateExamAssignments(store, examId, collectionsToAssign, assignmentsToRemove) {
+  store.dispatch('SET_BUSY', true);
   const assignPromises = collectionsToAssign.map(collection => _assignExamTo(examId, collection));
   const unassignPromises = assignmentsToRemove.map(assignment => _removeAssignment(assignment));
   const assignmentPromises = assignPromises.concat(unassignPromises);
@@ -242,9 +261,13 @@ function updateExamAssignments(store, examId, collectionsToAssign, assignmentsTo
       exams[examIndex].visibility = examVisibility;
       store.dispatch('SET_EXAMS', exams);
       store.dispatch('CORE_SET_ERROR', null);
+      store.dispatch('SET_BUSY', false);
       displayExamModal(store, false);
     },
-    error => CoreActions.handleError(store, error)
+    error => {
+      store.dispatch('SET_BUSY', false);
+      CoreActions.handleError(store, error);
+    }
   );
 }
 
@@ -253,42 +276,42 @@ function previewExam(store) {
 }
 
 function renameExam(store, examId, newExamTitle) {
-  ExamResource.getModel(examId).save({ title: newExamTitle }).then(
-    () => {
-      const exams = store.state.pageState.exams;
-      const examIndex = exams.findIndex(exam => exam.id === examId);
-      exams[examIndex].title = newExamTitle;
+  ExamResource.getModel(examId)
+    .save({ title: newExamTitle })
+    .then(
+      () => {
+        const exams = store.state.pageState.exams;
+        const examIndex = exams.findIndex(exam => exam.id === examId);
+        exams[examIndex].title = newExamTitle;
 
-      store.dispatch('SET_EXAMS', exams);
-      displayExamModal(store, false);
-    },
-    error => CoreActions.handleError(store, error)
-  );
+        store.dispatch('SET_EXAMS', exams);
+        displayExamModal(store, false);
+      },
+      error => CoreActions.handleError(store, error)
+    );
 }
 
 function deleteExam(store, examId) {
-  ExamResource.getModel(examId).delete().then(
-    () => {
-      const exams = store.state.pageState.exams;
-      const updatedExams = exams.filter(exam => exam.id !== examId);
+  ExamResource.getModel(examId)
+    .delete()
+    .then(
+      () => {
+        const exams = store.state.pageState.exams;
+        const updatedExams = exams.filter(exam => exam.id !== examId);
 
-      store.dispatch('SET_EXAMS', updatedExams);
-      displayExamModal(store, false);
-    },
-    error => CoreActions.handleError(store, error)
-  );
+        store.dispatch('SET_EXAMS', updatedExams);
+        displayExamModal(store, false);
+      },
+      error => CoreActions.handleError(store, error)
+    );
 }
 
-function getAllExercisesWithinTopic(store, channelId, topicId) {
+function getAllExercisesWithinTopic(store, topicId) {
   return new Promise((resolve, reject) => {
-    const exercisesPromise = ContentNodeResource.getDescendantsCollection(
-      topicId,
-      { channel_id: channelId },
-      {
-        descendant_kind: ContentNodeKinds.EXERCISE,
-        fields: ['pk', 'title', 'assessmentmetadata'],
-      }
-    ).fetch();
+    const exercisesPromise = ContentNodeResource.getDescendantsCollection(topicId, {
+      descendant_kind: ContentNodeKinds.EXERCISE,
+      fields: ['pk', 'title', 'assessmentmetadata'],
+    }).fetch();
 
     ConditionalPromise.all([exercisesPromise]).only(
       CoreActions.samePageCheckGenerator(store),
@@ -302,17 +325,16 @@ function getAllExercisesWithinTopic(store, channelId, topicId) {
 }
 
 // fetches topic, it's children subtopics, and children exercises
-function fetchContent(store, channelId, topicId) {
+function fetchContent(store, topicId) {
   return new Promise((resolve, reject) => {
-    const channelPayload = { channel_id: channelId };
-    const topicPromise = ContentNodeResource.getModel(topicId, channelPayload).fetch();
-    const ancestorsPromise = ContentNodeResource.fetchAncestors(topicId, channelPayload);
-    const subtopicsPromise = ContentNodeResource.getCollection(channelPayload, {
+    const topicPromise = ContentNodeResource.getModel(topicId).fetch();
+    const ancestorsPromise = ContentNodeResource.fetchAncestors(topicId);
+    const subtopicsPromise = ContentNodeResource.getCollection({
       parent: topicId,
       kind: ContentNodeKinds.TOPIC,
       fields: ['pk', 'title', 'ancestors'],
     }).fetch();
-    const exercisesPromise = ContentNodeResource.getCollection(channelPayload, {
+    const exercisesPromise = ContentNodeResource.getCollection({
       parent: topicId,
       kind: ContentNodeKinds.EXERCISE,
       fields: ['pk', 'title', 'assessmentmetadata'],
@@ -331,7 +353,7 @@ function fetchContent(store, channelId, topicId) {
         let subtopics = _topicsState(subtopicsCollection);
 
         const subtopicsExercisesPromises = subtopics.map(subtopic =>
-          getAllExercisesWithinTopic(store, channelId, subtopic.id)
+          getAllExercisesWithinTopic(store, subtopic.id)
         );
 
         ConditionalPromise.all(subtopicsExercisesPromises).only(
@@ -357,8 +379,8 @@ function fetchContent(store, channelId, topicId) {
 
 function showCreateExamPage(store, classId, channelId) {
   store.dispatch('CORE_SET_PAGE_LOADING', true);
-  store.dispatch('SET_PAGE_NAME', Constants.PageNames.CREATE_EXAM);
-  store.dispatch('CORE_SET_TITLE', Constants.PageTitles.CREATE_EXAM);
+  store.dispatch('SET_PAGE_NAME', PageNames.CREATE_EXAM);
+  store.dispatch('CORE_SET_TITLE', translator.$tr('coachExamCreationPageTitle'));
 
   const channelPromise = ChannelResource.getCollection().fetch();
   const examsPromise = ExamResource.getCollection({
@@ -372,7 +394,7 @@ function showCreateExamPage(store, classId, channelId) {
         channelsCollection.find(channel => channel.id === channelId)
       );
 
-      const fetchContentPromise = fetchContent(store, channelId, currentChannel.rootPk);
+      const fetchContentPromise = fetchContent(store, currentChannel.rootPk);
       ConditionalPromise.all([fetchContentPromise]).only(
         CoreActions.samePageCheckGenerator(store),
         ([content]) => {
@@ -422,23 +444,25 @@ function createExam(store, classCollection, examObj) {
     question_sources: examObj.questionSources,
     seed: examObj.seed,
   };
-  ExamResource.createModel(examPayload).save().then(
-    exam => {
-      _assignExamTo(exam.id, classCollection).then(
-        () => {
-          store.dispatch('CORE_SET_PAGE_LOADING', false);
-          router.getInstance().push({ name: Constants.PageNames.EXAMS });
-        },
-        error => CoreActions.handleError(store, error)
-      );
-    },
-    error => CoreActions.handleError(store, error)
-  );
+  ExamResource.createModel(examPayload)
+    .save()
+    .then(
+      exam => {
+        _assignExamTo(exam.id, classCollection).then(
+          () => {
+            store.dispatch('CORE_SET_PAGE_LOADING', false);
+            router.getInstance().push({ name: PageNames.EXAMS });
+          },
+          error => CoreActions.handleError(store, error)
+        );
+      },
+      error => CoreActions.handleError(store, error)
+    );
 }
 
 function showExamReportPage(store, classId, channelId, examId) {
   store.dispatch('CORE_SET_PAGE_LOADING', true);
-  store.dispatch('SET_PAGE_NAME', Constants.PageNames.EXAM_REPORT);
+  store.dispatch('SET_PAGE_NAME', PageNames.EXAM_REPORT);
   const examLogPromise = ExamLogResource.getCollection({
     exam: examId,
     collection: classId,
@@ -481,7 +505,7 @@ function showExamReportPage(store, classId, channelId, examId) {
       };
       store.dispatch('SET_PAGE_STATE', pageState);
       store.dispatch('CORE_SET_ERROR', null);
-      store.dispatch('CORE_SET_TITLE', 'Exam Report');
+      store.dispatch('CORE_SET_TITLE', translator.$tr('coachExamReportPageTitle'));
       store.dispatch('CORE_SET_PAGE_LOADING', false);
     },
     error => {
@@ -499,9 +523,9 @@ function showExamReportDetailPage(
   questionNumber,
   interactionIndex
 ) {
-  if (store.state.pageName !== Constants.PageNames.EXAM_REPORT_DETAIL) {
+  if (store.state.pageName !== PageNames.EXAM_REPORT_DETAIL) {
     store.dispatch('CORE_SET_PAGE_LOADING', true);
-    store.dispatch('SET_PAGE_NAME', Constants.PageNames.EXAM_REPORT_DETAIL);
+    store.dispatch('SET_PAGE_NAME', PageNames.EXAM_REPORT_DETAIL);
   }
   const examPromise = ExamResource.getModel(examId, {
     channel_id: channelId,
@@ -537,10 +561,9 @@ function showExamReportDetailPage(
           `Question number ${questionNumber} is not valid for this exam`
         );
       } else {
-        const contentPromise = ContentNodeResource.getCollection(
-          { channel_id: channelId },
-          { ids: questionSources.map(item => item.exercise_id) }
-        ).fetch();
+        const contentPromise = ContentNodeResource.getCollection({
+          ids: questionSources.map(item => item.exercise_id),
+        }).fetch();
 
         contentPromise.only(
           CoreActions.samePageCheckGenerator(store),
@@ -603,7 +626,7 @@ function showExamReportDetailPage(
 
             store.dispatch('SET_PAGE_STATE', pageState);
             store.dispatch('CORE_SET_ERROR', null);
-            store.dispatch('CORE_SET_TITLE', 'Exam Report Detail');
+            store.dispatch('CORE_SET_TITLE', translator.$tr('coachExamReportDetailPageTitle'));
             store.dispatch('CORE_SET_PAGE_LOADING', false);
           },
           error => CoreActions.handleApiError(store, error)
@@ -612,6 +635,10 @@ function showExamReportDetailPage(
     },
     error => CoreActions.handleApiError(store, error)
   );
+}
+
+function showExamModificationSnackbar(store) {
+  store.dispatch('CORE_SET_CURRENT_SNACKBAR', EXAM_MODIFICATION_SNACKBAR);
 }
 
 export {
@@ -631,4 +658,5 @@ export {
   addExercise,
   removeExercise,
   getAllExercisesWithinTopic,
+  showExamModificationSnackbar,
 };

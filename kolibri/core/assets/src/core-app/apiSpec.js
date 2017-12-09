@@ -24,27 +24,34 @@ import * as actions from '../state/actions';
 import * as store from '../state/store';
 import * as mappers from '../state/mappers';
 import contentRenderer from '../views/content-renderer';
-import exerciseAttempts from '../views/exercise-attempts';
 import downloadButton from '../views/content-renderer/download-button';
 import loadingSpinner from '../views/loading-spinner';
 import progressBar from '../views/progress-bar';
 import contentIcon from '../views/content-icon';
 import progressIcon from '../views/progress-icon';
+import permissionsIcon from '../views/permissions-icon';
 import coreBase from '../views/core-base';
 import coreModal from '../views/core-modal';
-import navBar from '../views/nav-bar';
-import iconButton from '../views/icon-button';
-import textbox from '../views/textbox';
+import sideNav from '../views/side-nav';
+import kButton from '../views/buttons-and-links/k-button';
+import kExternalLink from '../views/buttons-and-links/k-external-link';
+import kRouterLink from '../views/buttons-and-links/k-router-link';
+import kTextbox from '../views/k-textbox';
 import dropdownMenu from '../views/dropdown-menu';
-import tabs from '../views/tabs';
-import tabLink from '../views/tab-link';
-import tabButton from '../views/tab-button';
+import kNavbar from '../views/k-navbar';
+import kNavbarLink from '../views/k-navbar/link';
 import logo from '../views/logo';
+import languageSwitcherMixin from '../views/language-switcher/mixin.js';
+import languageSwitcherList from '../views/language-switcher/list.vue';
 import immersiveFullScreen from '../views/immersive-full-screen';
 import elapsedTime from '../views/elapsed-time';
 import pointsIcon from '../views/points-icon';
 import authMessage from '../views/auth-message';
-import breadcrumbs from '../views/breadcrumbs';
+import kBreadcrumbs from '../views/k-breadcrumbs';
+import kCheckbox from '../views/k-checkbox';
+import kRadioButton from '../views/k-radio-button';
+import kFilterTextbox from '../views/k-filter-textbox';
+import kSelect from '../views/k-select';
 import router from '../router';
 import responsiveWindow from '../mixins/responsive-window';
 import responsiveElement from '../mixins/responsive-element';
@@ -52,14 +59,24 @@ import theme from '../styles/core-theme.styl';
 import definitions from '../styles/definitions.styl';
 import keenVars from '../keen-config/variables.scss';
 import * as exams from '../exams/utils';
-import validateLinkObject from '../validateLinkObject';
+import * as validators from '../validators';
 import * as serverClock from '../serverClock';
 import * as resources from '../api-resources';
 import urls from './urls';
-import client from './client';
+import * as client from './client';
+import * as i18n from '../utils/i18n';
+import * as browser from '../utils/browser';
+import uiAlert from 'keen-ui/src/UiAlert';
+import tetherDrop from 'tether-drop';
+import tetherTooltip from 'tether-tooltip';
+import appBar from '../views/app-bar';
+import coreSnackbar from '../views/core-snackbar';
+import customUiMenu from '../views/custom-ui-menu';
+import heartbeat from '../heartbeat';
 
 export default {
   client,
+  heartbeat,
   lib: {
     logging,
     vue,
@@ -67,6 +84,8 @@ export default {
     conditionalPromise,
     apiResource,
     seededshuffle,
+    tetherDrop,
+    tetherTooltip,
   },
   coreVue: {
     vuex: {
@@ -78,32 +97,43 @@ export default {
     },
     components: {
       contentRenderer,
-      exerciseAttempts,
       downloadButton,
       loadingSpinner,
       progressBar,
       contentIcon,
       progressIcon,
+      permissionsIcon,
       coreBase,
       coreModal,
-      navBar,
-      iconButton,
-      textbox,
+      sideNav,
+      kButton,
+      kExternalLink,
+      kRouterLink,
+      kTextbox,
       dropdownMenu,
-      tabs,
-      tabLink,
-      tabButton,
+      kNavbar,
+      kNavbarLink,
+      languageSwitcherList,
       logo,
       immersiveFullScreen,
       elapsedTime,
       pointsIcon,
       authMessage,
-      breadcrumbs,
+      kBreadcrumbs,
+      kCheckbox,
+      kRadioButton,
+      kFilterTextbox,
+      kSelect,
+      uiAlert,
+      appBar,
+      coreSnackbar,
+      customUiMenu,
     },
     router,
     mixins: {
       responsiveWindow,
       responsiveElement,
+      languageSwitcherMixin,
     },
   },
   resources,
@@ -114,8 +144,10 @@ export default {
   },
   urls,
   utils: {
+    browser,
     exams,
-    validateLinkObject,
+    validators,
     serverClock,
+    i18n,
   },
 };
