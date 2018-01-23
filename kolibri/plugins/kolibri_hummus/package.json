@@ -1,0 +1,7 @@
+{
+  "name": "hummus",
+  "description": "A messaging and alert plugin.",
+  "private": true,
+  "dependencies": {
+  }
+}
