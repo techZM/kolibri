@@ -3,6 +3,7 @@ import KolibriApp from 'kolibri_app';
 import { initialState, mutations } from './state/store';
 import * as actions from './state/actions';
 import store from 'kolibri.coreVue.vuex.store';
+import { PageNames } from '../constants';
 
 const routes = [
   {
@@ -10,10 +11,17 @@ const routes = [
     redirect: '/chats',
   },
   {
-    name: 'CHATS',
+    name: PageNames.CHATS,
     path: '/chats',
     handler: () => {
       actions.showChatsPage(store);
+    },
+  },
+  {
+    name: PageNames.ALERTS,
+    path: '/alerts',
+    handler: () => {
+      actions.showAlertsPage(store);
     },
   },
   {

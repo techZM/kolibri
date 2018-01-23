@@ -1,33 +1,90 @@
 <template>
 
-  <CoreBase
+  <core-base
     :topLevelPageName="topLevelPageName"
-    :appBarTitle="$tr('hummus')"
+    :appBarTitle="$tr('messages')"
   >
-    Hummus
-  </CoreBase>
+    <div class="content">
+      <k-navbar>
+        <k-navbar-link
+          type="title"
+          :title="$tr('chats')"
+          icon="chat"
+          :link="chatsLink"
+        />
+        <k-navbar-link
+          type="title"
+          :title="$tr('alerts')"
+          icon="error"
+          :link="alertsLink"
+        />
+      </k-navbar>
+
+      <ChatsPage
+        v-if="isChatsPage"
+      />
+      <AlertsPage
+        v-if="isAlertsPage"
+      />
+    </div>
+  </core-base>
 
 </template>
 
 
 <script>
 
-  import CoreBase from 'kolibri.coreVue.components.coreBase';
+  import coreBase from 'kolibri.coreVue.components.coreBase';
+  import kNavbar from 'kolibri.coreVue.components.kNavbar';
+  import kNavbarLink from 'kolibri.coreVue.components.kNavbarLink';
+
+  import ChatsPage from './ChatsPage';
+  import AlertsPage from './AlertsPage';
+
   import { TopLevelPageNames } from 'kolibri.coreVue.vuex.constants';
 
+  import { PageNames } from '../../constants';
+
+
   export default {
-    name: 'HummusRoot',
+    name: 'messagesRoot',
     $trs: {
-      hummus: 'Hummus',
+      messages: 'Messages',
+      chats: 'Chats',
+      alerts: 'Alerts',
     },
     components: {
-      CoreBase,
+      coreBase,
+      kNavbar,
+      kNavbarLink,
+      ChatsPage,
+      AlertsPage,
     },
     computed: {
       topLevelPageName() {
-        return TopLevelPageNames.HUMMUS;
+        return TopLevelPageNames.MESSAGES;
       },
-
+      chatsLink() {
+        return {
+          name: PageNames.CHATS,
+        };
+      },
+      alertsLink() {
+        return {
+          name: PageNames.ALERTS,
+        };
+      },
+      isChatsPage() {
+        return this.pageName === PageNames.CHATS;
+      },
+      isAlertsPage() {
+        return this.pageName === PageNames.ALERTS;
+      }
+    },
+    vuex: {
+      getters: {
+        pageName: state => state.pageName,
+      },
     },
 
   };
@@ -38,5 +95,9 @@
 <style lang="stylus" scoped>
 
   @require '~kolibri.styles.definitions'
+
+  .content
+    background-color: $core-bg-light
+    padding: 1em
 
 </style>
