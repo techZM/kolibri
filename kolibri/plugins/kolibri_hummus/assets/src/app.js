@@ -1,10 +1,26 @@
 import RootVue from './views';
-
-
 import KolibriApp from 'kolibri_app';
 import { initialState, mutations } from './state/store';
+import * as actions from './state/actions';
+import store from 'kolibri.coreVue.vuex.store';
 
-const routes = [];
+const routes = [
+  {
+    path: '/',
+    redirect: '/chats',
+  },
+  {
+    name: 'CHATS',
+    path: '/chats',
+    handler: () => {
+      actions.showChatsPage(store);
+    },
+  },
+  {
+    path: '/*',
+    redirect: '/chats',
+  },
+];
 
 class HummusModule extends KolibriApp {
   get stateSetters() {
@@ -23,8 +39,6 @@ class HummusModule extends KolibriApp {
     return mutations;
   }
 }
-
-
 
 const hummus = new HummusModule();
 

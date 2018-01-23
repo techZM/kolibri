@@ -12,12 +12,10 @@ class Hummus(KolibriPluginBase):
         return "^kolibri_hummus/"
 
 
-
-
 class HummusAsset(webpack_hooks.WebpackBundleHook):
     unique_slug = "kolibri_hummus_module"
     src_file = "assets/src/app.js"
 
 
-
-
+class HummusInclusionHook(hooks.HummusSyncHook):
+    bundle_class = HummusAsset
