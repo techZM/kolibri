@@ -96,6 +96,7 @@
       facility: 'Facility',
       coach: 'Coach',
       device: 'Device',
+      messages: 'Messages',
       signIn: 'Sign in',
       profile: 'Profile',
       signOut: 'Sign out',
@@ -171,6 +172,12 @@
             href: '/device',
           });
         }
+        options.push({
+          label: this.$tr('messages'),
+          active: this.pageIsActive(TopLevelPageNames.MESSAGES),
+          icon: 'chat',
+          href: '/messages',
+        });
         options.push({ type: 'divider' });
         if (this.isUserLoggedIn) {
           options.push({
@@ -382,5 +389,6 @@
     &.is-divider
       margin-top: 0
       margin-bottom: 0
+      height: 2px
 
 </style>

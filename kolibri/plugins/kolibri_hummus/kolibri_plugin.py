@@ -9,7 +9,7 @@ class Hummus(KolibriPluginBase):
         return urls
 
     def url_slug(self):
-        return "^kolibri_hummus/"
+        return "^messages/"
 
 
 class HummusAsset(webpack_hooks.WebpackBundleHook):
