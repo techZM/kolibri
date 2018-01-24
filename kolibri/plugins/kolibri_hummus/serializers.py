@@ -7,7 +7,7 @@ class MessageSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         value = super(MessageSerializer, self).to_representation(instance)
 
-        if 'request' in self.context and self.context['request'].method == "GET":
+        if 'request' in self.context:
             user = self.context['request'].user
             senderinfo = {
                 "id": user.pk,
