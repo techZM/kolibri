@@ -57,6 +57,12 @@ class MessageThreadViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.deleted = True
+        instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     @detail_route(methods=['get'])
     def unreadcount_in_thread(self, request, **kwargs):
         instance = self.get_object()
