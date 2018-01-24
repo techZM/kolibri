@@ -13,6 +13,11 @@ const ICON_KINDS = {
 
 const MODALS = {
   NEW_CHAT: 'NEW_CHAT',
-  NEW_GROUP_CHAT: 'NEW_GROUP_CHAT',
 };
-export { PageNames, ICON_KINDS, MODALS };
+
+const NEW_CHAT_MODAL_STEPS = {
+  DIRECT: 'DIRECT',
+  GROUP: 'GROUP',
+};
+
+export { PageNames, ICON_KINDS, MODALS, NEW_CHAT_MODAL_STEPS };

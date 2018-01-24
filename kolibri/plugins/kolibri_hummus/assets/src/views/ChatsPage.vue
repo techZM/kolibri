@@ -3,13 +3,11 @@
   <div>
     <k-button
       text="New chat"
-      @click="openNewChatModal"
+      @click="openNewChat"
       :primary="true"
     />
 
-    <new-chat
-      v-if="showNewChat"
-    />
+    <new-chat v-if="showNewChat" />
 
     <messages-container
       :threads="threads"
@@ -24,7 +22,7 @@
 
   import MessagesContainer from './MessagesContainer';
   import kButton from 'kolibri.coreVue.components.kButton';
-  import { openNewChatModal } from '../state/actions';
+  import { openNewChat } from '../state/actions';
   import { MODALS } from '../../constants';
   import NewChat from './NewChat';
 
@@ -52,7 +50,7 @@
     },
     vuex: {
       actions: {
-        openNewChatModal,
+        openNewChat,
       },
       getters: {
         modal: state => state.pageState.modal,
