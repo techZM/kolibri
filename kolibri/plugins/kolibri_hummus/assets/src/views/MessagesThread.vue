@@ -1,21 +1,26 @@
 <template>
 
   <div class="messages-thread">
-    <div v-if="currentThread">
+    <div v-if="!currentThread">
       No thread selected :(
     </div>
     <template
       v-else
     >
       <div class="messages-thread-header">
-        This is the header and stuff
+        {{ currentThread.title }}
       </div>
 
       <div class="messages-thread-body">
-        bodyy
         <messages-thread-item
-          v-for="thread in currentThread"
-          :key="thread.id"
+          v-for="message in currentThread.messages"
+          :key="message.id"
+          :text="message.message"
+          :date="message.sentTime"
+          :senderUsername="message.senderinfo.username"
+          :senderFullname="message.senderinfo.full_name"
+          :senderId="message.senderinfo.id"
+          :recipientId="recipientId"
         />
       </div>
 
@@ -45,16 +50,18 @@
 
   import kTextbox from 'kolibri.coreVue.components.kTextbox';
   import kButton from 'kolibri.coreVue.components.kButton';
+  import MessagesThreadItem from './MessagesThreadItem';
 
   export default {
     name: 'MessagesThread',
     components: {
+      MessagesThreadItem,
       kTextbox,
       kButton,
     },
     props: {
       currentThread: {
-        type: Array,
+        type: Object,
         required: false,
       },
     },
@@ -62,6 +69,11 @@
       return {
         message: '',
       };
+    },
+    vuex: {
+      getters: {
+        recipientId: state => state.core.session.user_id,
+      },
     },
   };
 

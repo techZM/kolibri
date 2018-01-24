@@ -29,8 +29,8 @@
         required:true,
       },
       date: {
-        type: Date,
-        required:true,
+        type: String,
+        required: false,
       },
       senderUsername: {
         type: String,

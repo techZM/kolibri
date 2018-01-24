@@ -11,6 +11,7 @@
 <script>
 
   import MessagesContainer from './MessagesContainer';
+
   export default {
     name: 'ChatsPage',
     components: {
@@ -22,7 +23,7 @@
         required: true,
       },
       currentThread: {
-        type: Array,
+        type: Object,
         required: false,
       }
     },

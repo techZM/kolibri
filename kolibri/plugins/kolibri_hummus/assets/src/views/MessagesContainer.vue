@@ -25,7 +25,7 @@
         required: true,
       },
       currentThread: {
-        type: Array,
+        type: Object,
         required: false,
       },
     },

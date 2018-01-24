@@ -8,8 +8,10 @@
       v-else
       v-for="thread in threads"
       :key="thread.id"
-      :heading="thread.heading"
-      :body="thread.body"
+      :heading="thread.title"
+      :body="thread.messages[0].message"
+      :id="thread.id"
+      :kind="caldKind(thread.participants.length)"
     />
   </div>
 
@@ -19,6 +21,7 @@
 <script>
 
   import MessagesListItem from './MessagesListItem';
+  import { ICON_KINDS } from '../../constants';
 
   export default {
     name: 'MessagesList',
@@ -29,6 +32,14 @@
       threads: {
         type: Array,
         required: true,
+      },
+    },
+    methods: {
+      caldKind(numParticipants) {
+        if (numParticipants > 2) {
+          return ICON_KINDS.GROUP;
+        }
+        return ICON_KINDS.USER;
       },
     },
   };

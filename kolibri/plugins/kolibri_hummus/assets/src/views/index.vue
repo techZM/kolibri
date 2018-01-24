@@ -78,17 +78,17 @@
         };
       },
       isChatsPage() {
-        return this.pageName === PageNames.CHATS;
+        return [PageNames.CHATS, PageNames.CHATS_OPEN].includes(this.pageName);
       },
       isAlertsPage() {
-        return this.pageName === PageNames.ALERTS;
+        return [PageNames.ALERTS, PageNames.ALERTS_OPEN].includes(this.pageName);
       },
     },
     vuex: {
       getters: {
         pageName: state => state.pageName,
         threads: state => state.pageState.threads,
-        currentThread: state => state.currentThread,
+        currentThread: state => state.pageState.currentThread,
       },
     },
   };
