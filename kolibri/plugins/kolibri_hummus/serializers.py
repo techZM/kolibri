@@ -4,9 +4,25 @@ from .models import Message, MessageThread
 
 
 class MessageSerializer(serializers.ModelSerializer):
+    def to_representation(self, instance):
+        value = super(MessageSerializer, self).to_representation(instance)
+
+        if 'request' in self.context and self.context['request'].method == "GET":
+            user = self.context['request'].user
+            senderinfo = {
+                "id": user.pk,
+                "username": user.username,
+                "full_name": user.full_name
+            }
+            value.update(
+                {
+                    "senderinfo": senderinfo
+                })
+        return value
+
     class Meta:
         model = Message
-        fields = ('id', 'message', 'sentTime', 'opened', 'file', 'sender', 'thread')
+        fields = ('id', 'message', 'sentTime', 'opened', 'file', 'thread')
 
 
 class MessageThreadSerializer(serializers.ModelSerializer):
