@@ -2,6 +2,7 @@ import uuid
 
 from rest_framework import status, viewsets
 from rest_framework.decorators import detail_route, list_route
+from rest_framework.permissions import AllowAny, BasePermission
 from rest_framework.response import Response
 
 from . import models, serializers
@@ -34,11 +35,26 @@ class MessageViewSet(viewsets.ModelViewSet):
         return Response({'unreadcount': count})
 
 
+class IsAdminUser(BasePermission):
+    def has_permission(self, request, view):
+        if not request.user.roles.all().exists():
+            return False
+
+        return True
+
+
 class MessageThreadViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.MessageThreadSerializer
+    permission_classes = (IsAdminUser, AllowAny,)
 
     def get_queryset(self):
         return models.MessageThread.objects.all()
+
+    def get_permissions(self):
+        if self.action == 'create' or self.action == 'destroy':
+            return [IsAdminUser()]
+        else:
+            return [AllowAny()]
 
     def create(self, request, *args, **kwargs):
         title = request.data['title']
