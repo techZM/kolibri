@@ -18,7 +18,7 @@
 
 <script>
 
-  import MessagesListItem from './MessagesList';
+  import MessagesListItem from './MessagesListItem';
 
   export default {
     name: 'MessagesList',
