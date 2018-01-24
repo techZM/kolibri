@@ -59,22 +59,6 @@ class MessageThreadViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @detail_route(methods=['get'])
-    def unreadcount_in_thread(self, request, **kwargs):
-        instance = self.get_object()
-        count = 0
-        for message in instance.messages.all():
-            if not message.opened:
-                count += 1
-
-        return Response({'unreadcount': count})
-
-    @detail_route(methods=['get'])
-    def last_message(self, request, **kwargs):
-        instance = self.get_object()
-        messages = sorted(instance.messages.all(), key=lambda x: x.sentTime, reverse=True)
-        return Response({'last_message': messages[0].message})
-
-    @detail_route(methods=['get'])
     def recipients(self, request, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)

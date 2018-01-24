@@ -87,3 +87,6 @@ class Message(BaseModel):
         MessageThread,
         related_name='messages',
         verbose_name=_("thread"))
+
+    class Meta:
+        ordering = ['sentTime']
