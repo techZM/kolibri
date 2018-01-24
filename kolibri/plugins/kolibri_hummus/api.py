@@ -1,6 +1,5 @@
 import uuid
 
-from django.http import QueryDict
 from rest_framework import status, viewsets
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.response import Response
@@ -15,13 +14,11 @@ class MessageViewSet(viewsets.ModelViewSet):
         return models.Message.objects.all()
 
     def create(self, request, *args, **kwargs):
-        data = request.data.dict()
+        data = request.data
         data['id'] = uuid.uuid4().hex
         data['sender'] = request.user.pk
-        new_dict = QueryDict('', mutable=True)
-        new_dict.update(data)
 
-        serializer = self.get_serializer(data=new_dict)
+        serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
@@ -45,13 +42,11 @@ class MessageThreadViewSet(viewsets.ModelViewSet):
         return models.MessageThread.objects.all()
 
     def create(self, request, *args, **kwargs):
-        data = request.data.dict()
+        data = request.data
         data['id'] = uuid.uuid4().hex
-        data['sender'] = request.user.pk
-        new_dict = QueryDict('', mutable=True)
-        new_dict.update(data)
+        data['creator'] = request.user.pk
 
-        serializer = self.get_serializer(data=new_dict)
+        serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
