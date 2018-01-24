@@ -41,9 +41,21 @@ class MessageThreadViewSet(viewsets.ModelViewSet):
         return models.MessageThread.objects.all()
 
     def create(self, request, *args, **kwargs):
+        title = request.data['title']
+        thread = models.MessageThread.objects.filter(title=title)
+        if thread.exists() and len(thread[0].participants.all()) == 2:
+            receiver = thread[0].participants.exclude(pk=request.user.pk)
+            if receiver.exists():
+                serializer = self.get_serializer(thread.first())
+                headers = self.get_success_headers(serializer.data)
+                return Response(serializer.data, status=status.HTTP_200_OK, headers=headers)
+
         data = request.data
         data['id'] = uuid.uuid4().hex
         data['creator'] = request.user.pk
+
+        if request.user.pk not in data['participants']:
+            data['participants'].append(request.user.pk)
 
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
