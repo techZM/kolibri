@@ -16,6 +16,7 @@ export const mutations = {
     state.pageName = name;
   },
   SET_THREADS(state, threads) {
+    threads.reverse();
     state.pageState.threads = threads;
   },
   SET_CURRENT_THREAD(state, currentThread) {

@@ -1,5 +1,5 @@
 import { PageNames, MODALS, NEW_CHAT_MODAL_STEPS } from '../../constants';
-import { FacilityUserResource, MessageThreadResource } from 'kolibri.resources';
+import { FacilityUserResource, MessageThreadResource, MessageResource } from 'kolibri.resources';
 import ConditionalPromise from 'kolibri.lib.conditionalPromise';
 import { samePageCheckGenerator } from 'kolibri.coreVue.vuex.actions';
 import router from 'kolibri.coreVue.router';
@@ -73,6 +73,17 @@ export function createThread(store, title, userIds) {
         chatId: thread.id,
       },
     });
+    store.dispatch('CORE_SET_PAGE_LOADING', false);
+  });
+}
+
+export function sendMessage(store, threadId, text) {
+  store.dispatch('CORE_SET_PAGE_LOADING', true);
+  MessageResource.createMessage(threadId, text).then(message => {
+    const updatedCurrentThread = store.state.pageState.currentThread;
+    message.senderinfo = store.state.core.session;
+    updatedCurrentThread.messages.push(message);
+    store.dispatch('SET_CURRENT_THREAD', updatedCurrentThread);
     store.dispatch('CORE_SET_PAGE_LOADING', false);
   });
 }

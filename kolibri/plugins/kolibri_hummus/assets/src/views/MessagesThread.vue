@@ -27,7 +27,7 @@
         />
       </div>
 
-      <div class="messages-thread-input">
+      <form class="messages-thread-input" @submit.prevent="sendNewMessage">
         <k-textbox
           v-model="message"
           label="Message"
@@ -39,7 +39,7 @@
           :disabled="message === ''"
           type="submit"
         />
-      </div>
+      </form>
 
 
     </template>
@@ -54,6 +54,7 @@
   import kTextbox from 'kolibri.coreVue.components.kTextbox';
   import kButton from 'kolibri.coreVue.components.kButton';
   import MessagesThreadItem from './MessagesThreadItem';
+  import { sendMessage } from '../state/actions';
 
   export default {
     name: 'MessagesThread',
@@ -73,9 +74,18 @@
         message: '',
       };
     },
+    methods: {
+      sendNewMessage() {
+        this.sendMessage(this.threadId, this.message);
+      }
+    },
     vuex: {
       getters: {
         recipientId: state => state.core.session.user_id,
+        threadId: state => state.pageState.currentThread.id,
+      },
+      actions: {
+        sendMessage,
       },
     },
   };
