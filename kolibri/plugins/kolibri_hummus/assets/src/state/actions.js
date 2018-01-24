@@ -1,9 +1,22 @@
 import { PageNames, MODALS } from '../../constants';
+import { FacilityUserResource, MessageThreadResource } from 'kolibri.resources';
+import ConditionalPromise from 'kolibri.lib.conditionalPromise';
+import { samePageCheckGenerator } from 'kolibri.coreVue.vuex.actions';
 
 export function showChatsPage(store) {
   store.dispatch('SET_MODAL', null);
   store.dispatch('CORE_SET_PAGE_LOADING', true);
   store.dispatch('SET_PAGE_NAME', PageNames.CHATS);
+
+  const facilityUsersPromise = FacilityUserResource.getCollection().fetch({}, true);
+
+  const promises = [facilityUsersPromise];
+
+  ConditionalPromise.all(promises).only(samePageCheckGenerator(store), ([facilityUsers]) => {
+    store.dispatch('SET_FACILITY_USERS', facilityUsers);
+
+    store.dispatch('CORE_SET_PAGE_LOADING', false);
+  });
   // the dummy data is based on that the current user is bob
   const dummyThreads = [
     {
@@ -211,6 +224,27 @@ export function openChat(store, chatId) {
   store.dispatch('CORE_SET_PAGE_LOADING', false);
 }
 
+export function openNewChatModal(store) {
+  store.dispatch('CORE_SET_PAGE_LOADING', true);
+  store.dispatch('SET_MODAL', MODALS.NEW_CHAT);
+  store.dispatch('CORE_SET_PAGE_LOADING', false);
+}
+
+export function closeModal(store) {
+  store.dispatch('CORE_SET_PAGE_LOADING', true);
+  store.dispatch('SET_MODAL', null);
+  store.dispatch('CORE_SET_PAGE_LOADING', false);
+}
+
+export function createThread(store, title, userIds) {
+  console.log(title, userIds);
+  store.dispatch('CORE_SET_PAGE_LOADING', true);
+  MessageThreadResource.createMessageThread(title, ['userId']).then(thread => {
+    console.log(thread);
+    store.dispatch('CORE_SET_PAGE_LOADING', false);
+  });
+}
+
 export function showAlertsPage(store) {
   store.dispatch('CORE_SET_PAGE_LOADING', true);
   store.dispatch('SET_PAGE_NAME', PageNames.ALERTS);
@@ -365,21 +399,4 @@ export function openAlert(store, alertId) {
   store.dispatch('CORE_SET_PAGE_LOADING', false);
   // find last message read
   // if exists route to that, vue router replace
-}
-
-export function openNewChatModal(store) {
-  store.dispatch('CORE_SET_PAGE_LOADING', true);
-  store.dispatch('SET_MODAL', MODALS.NEW_CHAT);
-  store.dispatch('CORE_SET_PAGE_LOADING', false);
-}
-
-export function closeModal(store) {
-  store.dispatch('CORE_SET_PAGE_LOADING', true);
-  store.dispatch('SET_MODAL', null);
-  store.dispatch('CORE_SET_PAGE_LOADING', false);
-}
-
-export function createThread(store, userId) {
-  store.dispatch('CORE_SET_PAGE_LOADING', true);
-  store.dispatch('CORE_SET_PAGE_LOADING', false);
 }

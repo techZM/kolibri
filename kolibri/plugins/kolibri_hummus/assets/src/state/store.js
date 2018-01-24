@@ -6,6 +6,7 @@ export const initialState = {
     threads: null,
     currentThread: null,
     modal: null,
+    facilityUsers: [],
   },
 };
 
@@ -21,5 +22,8 @@ export const mutations = {
   },
   SET_MODAL(state, modal) {
     state.pageState.modal = modal;
+  },
+  SET_FACILITY_USERS(state, facilityUsers) {
+    state.pageState.facilityUsers = facilityUsers;
   },
 };

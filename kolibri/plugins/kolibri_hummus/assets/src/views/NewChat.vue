@@ -22,7 +22,7 @@
         <tr
           v-for="user in facilityUsers"
           :key="user.id"
-          @click="createThread(user.id)"
+          @click="createThread(user.full_name, [user.id])"
         >
           <td>{{ user.full_name }}</td>
           <td>{{ user.username }}</td>
