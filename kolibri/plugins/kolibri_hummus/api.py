@@ -28,14 +28,14 @@ class MessageViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     @list_route(methods=['get'])
-    def all_unread_messages_count(self, request, **kwargs):
+    def unreadcount(self, request, **kwargs):
         messages = self.get_queryset()
         count = 0
         for message in messages:
             if not message.opened:
                 count += 1
 
-        return Response({'unread_messages_count': count})
+        return Response({'unreadcount': count})
 
 
 class MessageThreadViewSet(viewsets.ModelViewSet):
@@ -58,14 +58,14 @@ class MessageThreadViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     @detail_route(methods=['get'])
-    def unread_messages_count_in_thread(self, request, **kwargs):
+    def unreadcount_in_thread(self, request, **kwargs):
         instance = self.get_object()
         count = 0
         for message in instance.messages.all():
             if not message.opened:
                 count += 1
 
-        return Response({'unread_messages_count': count})
+        return Response({'unreadcount': count})
 
     @detail_route(methods=['get'])
     def last_message(self, request, **kwargs):
