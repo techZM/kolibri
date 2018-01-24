@@ -1,6 +1,9 @@
-from django.conf.urls import url
+from django.conf.urls import include, url
+
 from . import views
+from .api_urls import urlpatterns
 
 urlpatterns = [
-    url(r'^', views.HummusView.as_view()),
+    url('^api/', include(urlpatterns)),
+    url('^$', views.HummusView.as_view()),
 ]
