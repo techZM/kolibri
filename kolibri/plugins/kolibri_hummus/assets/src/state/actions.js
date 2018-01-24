@@ -9,219 +9,31 @@ export function showChatsPage(store) {
   store.dispatch('SET_PAGE_NAME', PageNames.CHATS);
 
   const facilityUsersPromise = FacilityUserResource.getCollection().fetch({}, true);
+  const messageThreadsPromise = MessageThreadResource.listAllMessageThreads();
+  const promises = [facilityUsersPromise, messageThreadsPromise];
 
-  const promises = [facilityUsersPromise];
-
-  ConditionalPromise.all(promises).only(samePageCheckGenerator(store), ([facilityUsers]) => {
-    store.dispatch('SET_FACILITY_USERS', facilityUsers);
-
-    store.dispatch('CORE_SET_PAGE_LOADING', false);
-  });
-  // the dummy data is based on that the current user is bob
-  const dummyThreads = [
-    {
-      id: 'ed685aa460d346f1af1a7423226bfdea',
-      creator: '1e96a0124f4352e8a01d1f9e0c5d3d20',
-      title: 'Direct message with tommy',
-      deleted: false,
-      participants: ['1e96a0124f4352e8a01d1f9e0c5d3d20', 'ec8fb0259293ac3acf74162e02d927f5'],
-      messages: [
-        {
-          id: '6f74e4618b2e4fc3af249ba638dd30ec',
-          message: 'Hi',
-          sentTime: '2018-01-23T16:43:47.283553-08:00',
-          opened: true,
-          file: null,
-          thread: 'ed685aa460d346f1af1a7423226bfdea',
-          senderinfo: {
-            username: 'bob',
-            id: '1e96a0124f4352e8a01d1f9e0c5d3d20',
-            full_name: 'bob a',
-          },
-        },
-        {
-          id: '3236827654844aad974a110880c09d3b',
-          message: 'Hello',
-          sentTime: '2018-01-23T16:45:59.750275-08:00',
-          opened: false,
-          file: null,
-          thread: 'ed685aa460d346f1af1a7423226bfdea',
-          senderinfo: {
-            username: 'tommy',
-            id: 'ec8fb0259293ac3acf74162e02d927f5',
-            full_name: 'tommy b',
-          },
-        },
-      ],
-      unread_count: 1,
-    },
-    {
-      id: '41936969e5af485295f74672303afe6c',
-      creator: '1e96a0124f4352e8a01d1f9e0c5d3d20',
-      title: 'math class',
-      deleted: false,
-      participants: [
-        '1e96a0124f4352e8a01d1f9e0c5d3d20',
-        'ec8fb0259293ac3acf74162e02d927f5',
-        '996c671df343aa8483ad4f05c6d46c1b',
-      ],
-      messages: [
-        {
-          id: '3047280e2b464d35baabf6df235101f8',
-          message: 'We have a math class',
-          sentTime: '2018-01-23T22:31:19.726361-08:00',
-          opened: false,
-          file: null,
-          thread: '41936969e5af485295f74672303afe6c',
-          senderinfo: {
-            username: 'tommy',
-            id: 'ec8fb0259293ac3acf74162e02d927f5',
-            full_name: 'tommy b',
-          },
-        },
-        {
-          id: '4549191851184ab59c488c826c721c70',
-          message: 'And an exam',
-          sentTime: '4549191851184ab59c488c826c721c70',
-          opened: false,
-          file: null,
-          thread: '41936969e5af485295f74672303afe6c',
-          senderinfo: {
-            username: 'daniel',
-            id: '996c671df343aa8483ad4f05c6d46c1b',
-            full_name: 'daniel c',
-          },
-        },
-      ],
-      unread_count: 2,
-    },
-  ];
-  store.dispatch('SET_THREADS', dummyThreads);
-  store.dispatch('CORE_SET_PAGE_LOADING', false);
-  // find last message read
-  // if exists route to that, vue router replace
+  ConditionalPromise.all(promises).only(
+    samePageCheckGenerator(store),
+    ([facilityUsers, messageThreads]) => {
+      // console.log(messageThreads);
+      store.dispatch('SET_FACILITY_USERS', facilityUsers);
+      store.dispatch('SET_THREADS', messageThreads);
+      store.dispatch('CORE_SET_PAGE_LOADING', false);
+    }
+  );
 }
 
 export function openChat(store, chatId) {
   store.dispatch('CORE_SET_PAGE_LOADING', true);
   store.dispatch('SET_PAGE_NAME', PageNames.CHATS_OPEN);
-  const dummyThreads = [
-    {
-      id: 'ed685aa460d346f1af1a7423226bfdea',
-      creator: '1e96a0124f4352e8a01d1f9e0c5d3d20',
-      title: 'Direct message with tommy',
-      deleted: false,
-      participants: ['1e96a0124f4352e8a01d1f9e0c5d3d20', 'ec8fb0259293ac3acf74162e02d927f5'],
-      messages: [
-        {
-          id: '6f74e4618b2e4fc3af249ba638dd30ec',
-          message: 'Hi',
-          sentTime: '2018-01-23T16:43:47.283553-08:00',
-          opened: true,
-          file: null,
-          thread: 'ed685aa460d346f1af1a7423226bfdea',
-          senderinfo: {
-            username: 'bob',
-            id: '1e96a0124f4352e8a01d1f9e0c5d3d20',
-            full_name: 'bob a',
-          },
-        },
-        {
-          id: '3236827654844aad974a110880c09d3b',
-          message: 'Hello',
-          sentTime: '2018-01-23T16:45:59.750275-08:00',
-          opened: false,
-          file: null,
-          thread: 'ed685aa460d346f1af1a7423226bfdea',
-          senderinfo: {
-            username: 'tommy',
-            id: 'ec8fb0259293ac3acf74162e02d927f5',
-            full_name: 'tommy b',
-          },
-        },
-      ],
-      unread_count: 1,
-    },
-    {
-      id: '41936969e5af485295f74672303afe6c',
-      creator: '1e96a0124f4352e8a01d1f9e0c5d3d20',
-      title: 'math class',
-      deleted: false,
-      participants: [
-        '1e96a0124f4352e8a01d1f9e0c5d3d20',
-        'ec8fb0259293ac3acf74162e02d927f5',
-        '996c671df343aa8483ad4f05c6d46c1b',
-      ],
-      messages: [
-        {
-          id: '3047280e2b464d35baabf6df235101f8',
-          message: 'We have a math class',
-          sentTime: '2018-01-23T22:31:19.726361-08:00',
-          opened: false,
-          file: null,
-          thread: '41936969e5af485295f74672303afe6c',
-          senderinfo: {
-            username: 'tommy',
-            id: 'ec8fb0259293ac3acf74162e02d927f5',
-            full_name: 'tommy b',
-          },
-        },
-        {
-          id: '4549191851184ab59c488c826c721c70',
-          message: 'And an exam',
-          sentTime: '4549191851184ab59c488c826c721c70',
-          opened: false,
-          file: null,
-          thread: '41936969e5af485295f74672303afe6c',
-          senderinfo: {
-            username: 'daniel',
-            id: '996c671df343aa8483ad4f05c6d46c1b',
-            full_name: 'daniel c',
-          },
-        },
-      ],
-      unread_count: 2,
-    },
-  ];
-  store.dispatch('SET_THREADS', dummyThreads);
-  const dummyCurrentThread = {
-    id: chatId,
-    creator: '1e96a0124f4352e8a01d1f9e0c5d3d20',
-    title: 'Direct message with tommy',
-    deleted: false,
-    participants: ['1e96a0124f4352e8a01d1f9e0c5d3d20', 'ec8fb0259293ac3acf74162e02d927f5'],
-    messages: [
-      {
-        id: '6f74e4618b2e4fc3af249ba638dd30ec',
-        message: 'Hi',
-        sentTime: '2018-01-23T16:43:47.283553-08:00',
-        opened: true,
-        file: null,
-        thread: 'ed685aa460d346f1af1a7423226bfdea',
-        senderinfo: {
-          username: 'bob',
-          id: '1e96a0124f4352e8a01d1f9e0c5d3d20',
-          full_name: 'bob a',
-        },
-      },
-      {
-        id: '3236827654844aad974a110880c09d3b',
-        message: 'Hello',
-        sentTime: '2018-01-23T16:45:59.750275-08:00',
-        opened: false,
-        file: null,
-        thread: 'ed685aa460d346f1af1a7423226bfdea',
-        senderinfo: {
-          username: 'tommy',
-          id: 'ec8fb0259293ac3acf74162e02d927f5',
-          full_name: 'tommy b',
-        },
-      },
-    ],
-    unread_count: 1,
-  };
-  store.dispatch('SET_CURRENT_THREAD', dummyCurrentThread);
-  store.dispatch('CORE_SET_PAGE_LOADING', false);
+
+  MessageThreadResource.listAllMessageThreads().then(data => {
+    store.dispatch('SET_THREADS', data);
+  });
+  MessageThreadResource.getMessageThreadDetails(chatId).THEN(data => {
+    store.dispatch('SET_CURRENT_THREAD', data);
+    store.dispatch('CORE_SET_PAGE_LOADING', false);
+  });
 }
 
 export function openNewChatModal(store) {
@@ -237,10 +49,10 @@ export function closeModal(store) {
 }
 
 export function createThread(store, title, userIds) {
-  console.log(title, userIds);
+  // console.log(title, userIds);
   store.dispatch('CORE_SET_PAGE_LOADING', true);
-  MessageThreadResource.createMessageThread(title, ['userId']).then(thread => {
-    console.log(thread);
+  MessageThreadResource.createMessageThread(title, userIds).then(() => {
+    // console.log(thread);
     store.dispatch('CORE_SET_PAGE_LOADING', false);
   });
 }
