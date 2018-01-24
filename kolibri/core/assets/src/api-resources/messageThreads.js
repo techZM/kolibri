@@ -24,4 +24,12 @@ export default class MessageThreadResource extends Resource {
       .getPromise(window.location.origin + '/messages/api/threads')
       .then(obj => obj.data);
   }
+
+  getMessageThreadDetails(thread_id) {
+    var client = new Client.Client();
+
+    return client
+      .getPromise(window.location.origin + '/messages/api/threads/' + thread_id + '/')
+      .then(obj => obj.data);
+  }
 }
