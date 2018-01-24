@@ -9,7 +9,6 @@ class MessageSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         value = super(MessageSerializer, self).to_representation(instance)
 
-        # if it has the file_size flag add extra file_size information
         if 'request' in self.context:
             value['id'] = uuid.uuid4().hex
 

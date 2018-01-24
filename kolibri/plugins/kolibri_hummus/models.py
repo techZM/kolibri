@@ -50,7 +50,13 @@ def generate_file_path(instance, filename):
     return 'user_{}/{}'.format(instance.user.id, filename)
 
 
-class MessageThread(models.Model):
+class BaseModel(models.Model):
+
+    class Meta:
+        abstract = True  # specify this model as an Abstract Model
+
+
+class MessageThread(BaseModel):
     id = UUIDField(primary_key=True)
     creator = models.ForeignKey(
         FacilityUser,
@@ -66,7 +72,7 @@ class MessageThread(models.Model):
         help_text=_("Users who are in the message thread"))
 
 
-class Message(models.Model):
+class Message(BaseModel):
     id = UUIDField(primary_key=True)
     message = models.TextField()
     sentTime = models.DateTimeField(auto_now_add=True)

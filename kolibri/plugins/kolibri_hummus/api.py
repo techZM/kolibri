@@ -17,6 +17,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         data = request.data.dict()
         data['id'] = uuid.uuid4().hex
+        data['sender'] = request.user.pk
         new_dict = QueryDict('', mutable=True)
         new_dict.update(data)
 
@@ -46,6 +47,7 @@ class MessageThreadViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         data = request.data.dict()
         data['id'] = uuid.uuid4().hex
+        data['sender'] = request.user.pk
         new_dict = QueryDict('', mutable=True)
         new_dict.update(data)
 
@@ -64,3 +66,9 @@ class MessageThreadViewSet(viewsets.ModelViewSet):
                 count += 1
 
         return Response({'unread_messages_count': count})
+
+    @detail_route(methods=['get'])
+    def last_message(self, request, **kwargs):
+        instance = self.get_object()
+        messages = sorted(instance.messages.all(), key=lambda x: x.sentTime, reverse=True)
+        return Response({'last_message': messages[0].message})
