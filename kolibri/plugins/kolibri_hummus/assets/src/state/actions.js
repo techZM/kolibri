@@ -378,3 +378,8 @@ export function closeModal(store) {
   store.dispatch('SET_MODAL', null);
   store.dispatch('CORE_SET_PAGE_LOADING', false);
 }
+
+export function createThread(store, userId) {
+  store.dispatch('CORE_SET_PAGE_LOADING', true);
+  store.dispatch('CORE_SET_PAGE_LOADING', false);
+}
