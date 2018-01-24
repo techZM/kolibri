@@ -1,6 +1,7 @@
-import { PageNames } from '../../constants';
+import { PageNames, MODALS } from '../../constants';
 
 export function showChatsPage(store) {
+  store.dispatch('SET_MODAL', null);
   store.dispatch('CORE_SET_PAGE_LOADING', true);
   store.dispatch('SET_PAGE_NAME', PageNames.CHATS);
   // the dummy data is based on that the current user is bob
@@ -364,4 +365,16 @@ export function openAlert(store, alertId) {
   store.dispatch('CORE_SET_PAGE_LOADING', false);
   // find last message read
   // if exists route to that, vue router replace
+}
+
+export function openNewChatModal(store) {
+  store.dispatch('CORE_SET_PAGE_LOADING', true);
+  store.dispatch('SET_MODAL', MODALS.NEW_CHAT);
+  store.dispatch('CORE_SET_PAGE_LOADING', false);
+}
+
+export function closeModal(store) {
+  store.dispatch('CORE_SET_PAGE_LOADING', true);
+  store.dispatch('SET_MODAL', null);
+  store.dispatch('CORE_SET_PAGE_LOADING', false);
 }

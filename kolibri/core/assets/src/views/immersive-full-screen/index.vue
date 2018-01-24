@@ -2,15 +2,17 @@
 
   <div class="whole-page">
     <div class="top-bar">
-      <router-link class="back-btn" :to="backPageLink">
-        <mat-svg
-          class="back svg-back"
-          category="navigation"
-          name="arrow_back"
-          :class="{ 'rtl-icon': isRtl }"
-        />
-        <p class="back">{{ backPageText }}</p>
-      </router-link>
+      <div @click="$emit('close')">
+        <router-link class="back-btn" :to="backPageLink">
+          <mat-svg
+            class="back svg-back"
+            category="navigation"
+            name="arrow_back"
+            :class="{ 'rtl-icon': isRtl }"
+          />
+          <p class="back">{{ backPageText }}</p>
+        </router-link>
+      </div>
     </div>
     <div class="page-body">
       <slot></slot>

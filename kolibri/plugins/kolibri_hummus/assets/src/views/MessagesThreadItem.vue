@@ -5,7 +5,7 @@
       {{ senderUsername }}
     </div>
     <div
-      class="messages=thread-item-text"
+      class="messages-thread-item-text"
       :class="
         isCurrentUsersMessage ?
           'messages=thread-item-text-other' :

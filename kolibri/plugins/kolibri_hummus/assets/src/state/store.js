@@ -5,6 +5,7 @@ export const initialState = {
   pageState: {
     threads: null,
     currentThread: null,
+    modal: null,
   },
 };
 
@@ -17,5 +18,8 @@ export const mutations = {
   },
   SET_CURRENT_THREAD(state, currentThread) {
     state.pageState.currentThread = currentThread;
+  },
+  SET_MODAL(state, modal) {
+    state.pageState.modal = modal;
   },
 };

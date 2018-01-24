@@ -10,4 +10,9 @@ const ICON_KINDS = {
   CLASS: 'CLASS',
   ALERT: 'ALERT',
 };
-export { PageNames, ICON_KINDS };
+
+const MODALS = {
+  NEW_CHAT: 'NEW_CHAT',
+  NEW_GROUP_CHAT: 'NEW_GROUP_CHAT',
+};
+export { PageNames, ICON_KINDS, MODALS };
