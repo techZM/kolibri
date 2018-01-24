@@ -16,4 +16,11 @@ export default class MessageResource extends Resource {
       })
       .then(obj => obj.data);
   }
+
+  getMessageUnreadCount() {
+    var c = new client.Client();
+    return c
+      .getPromise(window.lcation.origin + '/messages/api/message/unreadcount')
+      .then(obj => obj.data);
+  }
 }
