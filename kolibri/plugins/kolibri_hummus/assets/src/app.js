@@ -18,7 +18,7 @@ const routes = [
     path: '/chats',
     handler: () => {
       console.log('testing message creation');
-      MessageThreadResource.createMessageThread('nice', ['0b0de46b76ecd91d9dfed8a94341c476']);
+
       actions.showChatsPage(store);
     },
   },

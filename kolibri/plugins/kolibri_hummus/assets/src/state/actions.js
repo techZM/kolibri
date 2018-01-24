@@ -1,4 +1,4 @@
-import { PageNames, MODALS } from '../../constants';
+import { PageNames, MODALS, NEW_CHAT_MODAL_STEPS } from '../../constants';
 import { FacilityUserResource, MessageThreadResource } from 'kolibri.resources';
 import ConditionalPromise from 'kolibri.lib.conditionalPromise';
 import { samePageCheckGenerator } from 'kolibri.coreVue.vuex.actions';
@@ -224,9 +224,17 @@ export function openChat(store, chatId) {
   store.dispatch('CORE_SET_PAGE_LOADING', false);
 }
 
-export function openNewChatModal(store) {
+export function openNewChat(store) {
   store.dispatch('CORE_SET_PAGE_LOADING', true);
   store.dispatch('SET_MODAL', MODALS.NEW_CHAT);
+  store.dispatch('SET_MODAL_STEP', NEW_CHAT_MODAL_STEPS.DIRECT);
+  store.dispatch('CORE_SET_PAGE_LOADING', false);
+}
+
+export function openNewGroupChat(store) {
+  store.dispatch('CORE_SET_PAGE_LOADING', true);
+  store.dispatch('SET_MODAL', MODALS.NEW_CHAT);
+  store.dispatch('SET_MODAL_STEP', NEW_CHAT_MODAL_STEPS.GROUP);
   store.dispatch('CORE_SET_PAGE_LOADING', false);
 }
 
