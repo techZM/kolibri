@@ -27,6 +27,7 @@ import DeviceProvisionResource from './deviceProvision';
 import DevicePermissionsResource, { NewDevicePermissionsResource } from './devicePermissions';
 import RemoteChannel from './remoteChannel';
 import MessageThreadResource from './messageThreads';
+import MessageResource from './messages';
 
 const classroomResource = new ClassroomResource();
 const contentNodeResource = new ContentNodeResource();
@@ -52,6 +53,7 @@ const examAttemptLogResource = new ExamAttemptLogResource();
 const facilityDatasetResource = new FacilityDatasetResource();
 const userProgressResource = new UserProgressResource();
 const messageThreadResource = new MessageThreadResource();
+const messageResource = new MessageResource();
 const contentNodeProgressResource = new ContentNodeProgressResource();
 const deviceProvisionResource = new DeviceProvisionResource();
 const devicePermissionsResource = new DevicePermissionsResource();
@@ -62,6 +64,7 @@ const RemoteChannelResource = new RemoteChannel();
 export {
   classroomResource as ClassroomResource,
   messageThreadResource as MessageThreadResource,
+  messageResource as MessageResource,
   contentNodeResource as ContentNodeResource,
   ContentNodeGranularResource,
   RemoteChannelResource,
