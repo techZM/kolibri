@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     'django_js_reverse',
     'jsonfield',
     'morango',
+    'kolibri.plugins.kolibri_hummus',
 ] + conf.config['INSTALLED_APPS']
 
 # Add in the external plugins' locale paths. Our frontend messages depends

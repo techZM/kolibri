@@ -28,6 +28,10 @@ class MessageSerializer(serializers.ModelSerializer):
 class MessageThreadSerializer(serializers.ModelSerializer):
     messages = MessageSerializer(many=True)
 
+    def create(self, data):
+        t = MessageThread.objects.create(**data)
+        return t
+
     def to_representation(self, instance):
         value = super(MessageThreadSerializer, self).to_representation(instance)
 
