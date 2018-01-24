@@ -7,24 +7,28 @@
     <div class="content">
       <k-navbar>
         <k-navbar-link
-          type="title"
+          type="icon-and-title"
           :title="$tr('chats')"
           icon="chat"
           :link="chatsLink"
         />
         <k-navbar-link
-          type="title"
+          type="icon-and-title"
           :title="$tr('alerts')"
           icon="error"
           :link="alertsLink"
         />
       </k-navbar>
 
-      <ChatsPage
+      <chats-page
         v-if="isChatsPage"
+        :threads="threads"
+        :currentThread="currentThread"
       />
-      <AlertsPage
-        v-if="isAlertsPage"
+      <alerts-page
+        v-else-if="isAlertsPage"
+        :threads="threads"
+        :currentThread="currentThread"
       />
     </div>
   </core-base>
@@ -44,7 +48,6 @@
   import { TopLevelPageNames } from 'kolibri.coreVue.vuex.constants';
 
   import { PageNames } from '../../constants';
-
 
   export default {
     name: 'messagesRoot',
@@ -79,14 +82,15 @@
       },
       isAlertsPage() {
         return this.pageName === PageNames.ALERTS;
-      }
+      },
     },
     vuex: {
       getters: {
         pageName: state => state.pageName,
+        threads: state => state.pageState.threads,
+        currentThread: state => state.currentThread,
       },
     },
-
   };
 
 </script>

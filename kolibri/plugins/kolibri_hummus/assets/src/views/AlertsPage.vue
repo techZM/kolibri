@@ -11,18 +11,13 @@
 
   export default {
     name: 'AlertsPage',
-    components: {
-
-    },
-    computed: {
-
-    },
+    components: {},
+    computed: {},
     vuex: {
       getters: {
         pageName: state => state.pageName,
       },
     },
-
   };
 
 </script>

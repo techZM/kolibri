@@ -175,7 +175,7 @@
         options.push({
           label: this.$tr('messages'),
           active: this.pageIsActive(TopLevelPageNames.MESSAGES),
-          icon: 'chat',
+          icon: 'mail_outline',
           href: '/messages',
         });
         options.push({ type: 'divider' });

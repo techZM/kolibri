@@ -8,13 +8,22 @@ import { PageNames } from '../constants';
 const routes = [
   {
     path: '/',
-    redirect: '/chats',
+    redirect: {
+      name: PageNames.CHATS,
+    },
   },
   {
     name: PageNames.CHATS,
     path: '/chats',
     handler: () => {
       actions.showChatsPage(store);
+    },
+  },
+  {
+    name: PageNames.CHATS_OPEN,
+    path: '/chats/:chatId',
+    handler: toRoute => {
+      actions.openChat(store, toRoute.params.chatId);
     },
   },
   {
@@ -25,8 +34,17 @@ const routes = [
     },
   },
   {
+    name: PageNames.ALERTS_OPEN,
+    path: '/alerts/:alertId',
+    handler: toRoute => {
+      actions.openAlert(store, toRoute.params.alertId);
+    },
+  },
+  {
     path: '/*',
-    redirect: '/chats',
+    redirect: {
+      name: PageNames.CHATS,
+    },
   },
 ];
 

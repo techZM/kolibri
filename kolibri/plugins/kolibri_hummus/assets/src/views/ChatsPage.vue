@@ -1,28 +1,31 @@
 <template>
 
-  <div>
-    Chats page
-  </div>
+  <messages-container
+    :threads="threads"
+    :currentThread="currentThread"
+  />
 
 </template>
 
 
 <script>
 
+  import MessagesContainer from './MessagesContainer';
   export default {
     name: 'ChatsPage',
     components: {
-
+      MessagesContainer,
     },
-    computed: {
-
-    },
-    vuex: {
-      getters: {
-        pageName: state => state.pageName,
+    props: {
+      threads: {
+        type: Array,
+        required: true,
       },
+      currentThread: {
+        type: Array,
+        required: false,
+      }
     },
-
   };
 
 </script>
