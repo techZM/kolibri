@@ -12,6 +12,9 @@
       </div>
 
       <div class="messages-thread-body">
+        <p v-if="!currentThread.messages.length">
+          No messages. Send a new message! :D
+        </p>
         <messages-thread-item
           v-for="message in currentThread.messages"
           :key="message.id"

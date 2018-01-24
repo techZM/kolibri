@@ -2,6 +2,7 @@ import { PageNames, MODALS, NEW_CHAT_MODAL_STEPS } from '../../constants';
 import { FacilityUserResource, MessageThreadResource } from 'kolibri.resources';
 import ConditionalPromise from 'kolibri.lib.conditionalPromise';
 import { samePageCheckGenerator } from 'kolibri.coreVue.vuex.actions';
+import router from 'kolibri.coreVue.router';
 
 export function showChatsPage(store) {
   store.dispatch('SET_MODAL', null);
@@ -15,7 +16,6 @@ export function showChatsPage(store) {
   ConditionalPromise.all(promises).only(
     samePageCheckGenerator(store),
     ([facilityUsers, messageThreads]) => {
-      // console.log(messageThreads);
       store.dispatch('SET_FACILITY_USERS', facilityUsers);
       store.dispatch('SET_THREADS', messageThreads);
       store.dispatch('CORE_SET_PAGE_LOADING', false);
@@ -24,16 +24,24 @@ export function showChatsPage(store) {
 }
 
 export function openChat(store, chatId) {
+  store.dispatch('SET_MODAL', null);
   store.dispatch('CORE_SET_PAGE_LOADING', true);
   store.dispatch('SET_PAGE_NAME', PageNames.CHATS_OPEN);
 
-  MessageThreadResource.listAllMessageThreads().then(data => {
-    store.dispatch('SET_THREADS', data);
-  });
-  MessageThreadResource.getMessageThreadDetails(chatId).THEN(data => {
-    store.dispatch('SET_CURRENT_THREAD', data);
-    store.dispatch('CORE_SET_PAGE_LOADING', false);
-  });
+  const facilityUsersPromise = FacilityUserResource.getCollection().fetch({}, true);
+  const messageThreadsPromise = MessageThreadResource.listAllMessageThreads();
+  const currentThreadPromise = MessageThreadResource.getMessageThreadDetails(chatId);
+  const promises = [facilityUsersPromise, messageThreadsPromise, currentThreadPromise];
+
+  ConditionalPromise.all(promises).only(
+    samePageCheckGenerator(store),
+    ([facilityUsers, messageThreads, currentThread]) => {
+      store.dispatch('SET_FACILITY_USERS', facilityUsers);
+      store.dispatch('SET_THREADS', messageThreads);
+      store.dispatch('SET_CURRENT_THREAD', currentThread);
+      store.dispatch('CORE_SET_PAGE_LOADING', false);
+    }
+  );
 }
 
 export function openNewChat(store) {
@@ -57,10 +65,14 @@ export function closeModal(store) {
 }
 
 export function createThread(store, title, userIds) {
-  // console.log(title, userIds);
   store.dispatch('CORE_SET_PAGE_LOADING', true);
-  MessageThreadResource.createMessageThread(title, userIds).then(() => {
-    // console.log(thread);
+  MessageThreadResource.createMessageThread(title, userIds).then(thread => {
+    router.getInstance().push({
+      name: PageNames.CHATS_OPEN,
+      params: {
+        chatId: thread.id,
+      },
+    });
     store.dispatch('CORE_SET_PAGE_LOADING', false);
   });
 }

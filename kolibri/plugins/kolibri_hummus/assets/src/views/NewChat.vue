@@ -36,8 +36,6 @@
 
     </template>
 
-
-
   </immersive-full-screen>
 
 </template>

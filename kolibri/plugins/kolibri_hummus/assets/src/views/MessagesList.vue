@@ -9,9 +9,9 @@
       v-for="thread in threads"
       :key="thread.id"
       :heading="thread.title"
-      :body="thread.messages[0].message"
+      :body="getLastMessage(thread.messages)"
       :id="thread.id"
-      :kind="caldKind(thread.participants.length)"
+      :kind="calcKind(thread.participants.length)"
     />
   </div>
 
@@ -35,12 +35,18 @@
       },
     },
     methods: {
-      caldKind(numParticipants) {
+      calcKind(numParticipants) {
         if (numParticipants > 2) {
           return ICON_KINDS.GROUP;
         }
         return ICON_KINDS.USER;
       },
+      getLastMessage(messages) {
+        if (!messages.length) {
+          return 'No messages';
+        }
+        return messages[0].message;
+      }
     },
   };
 
