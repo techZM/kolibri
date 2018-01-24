@@ -78,3 +78,11 @@ class MessageThreadViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         messages = sorted(instance.messages.all(), key=lambda x: x.sentTime, reverse=True)
         return Response({'last_message': messages[0].message})
+
+    @detail_route(methods=['get'])
+    def recipients(self, request, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        recipients = serializer.data['participants']
+        recipients.remove(request.user.pk)
+        return Response({'recipients': recipients})
