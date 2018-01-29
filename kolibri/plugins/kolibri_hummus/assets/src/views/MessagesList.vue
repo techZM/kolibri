@@ -45,7 +45,7 @@
         if (!messages.length) {
           return 'No messages';
         }
-        return messages[0].message;
+        return messages[messages.length - 1].message;
       }
     },
   };

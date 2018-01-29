@@ -25,9 +25,9 @@
         />
       </div>
       <div class="message-list-item-content">
-        <div class="message-list-item-content-heading">
+        <h3 class="message-list-item-content-heading">
           {{ heading }}
-        </div>
+        </h3>
         <div class="message-list-item-content-body">
           {{ body }}
         </div>
@@ -112,7 +112,7 @@
   @require '~kolibri.styles.definitions'
 
   .messages-list-item
-    border: solid 1px
+    border-bottom: solid 1px
     width: 100%
     height: 100px
 
