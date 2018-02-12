@@ -9,15 +9,16 @@ To do the initial setup of after the installation, follow these steps.
 .. note::
   You need to do the initial setup only once, the first time you start Kolibri after the installation.
 
-#. **Select the default language for Kolibri.** 
+#. **Select the default language for Kolibri.**
 
   	.. figure:: img/select-language.png
 	   :alt: Select the default Kolibri language.
 
 	   Select the default Kolibri language.
 
-  .. tip::
-    You can :ref:`change the user interface language <change_language>` later, from the user menu in the upper right corner.
+
+	.. tip::
+	  You can :ref:`change the user interface language <change_language>` later, from the user menu in the upper right corner.
 
 #. **Name your facility.** A Facility is the location where you installed Kolibri, such as a school or a training center.
 
@@ -26,7 +27,7 @@ To do the initial setup of after the installation, follow these steps.
 
 	   Select the name for the facility where Kolibri is running.
 
-#. **Create the Admin account.** This Admin user will be a **Super User** able to manage all the device content, and all the rest of the facility users and their permisions.
+#. **Create the Admin account.** This Admin user will be a **Super User** able to manage all the device content, and all the rest of the facility users and their permissions.
 
   	.. figure:: img/create-superuser.png
 	   :alt: Select the username and password for the facility Super User.
@@ -39,12 +40,12 @@ To do the initial setup of after the installation, follow these steps.
 | Facility type                                    | Users                                              |
 +==================================================+====================================================+
 | | **Admin managed**                              | * Admins must create all user accounts.            |
-| | For schools and other formal learning contexts.| * Users can sign in without password.              | 
+| | For schools and other formal learning contexts.| * Users can sign in without password.              |
 |                                                  | * Users cannot edit their account information.     |
 +--------------------------------------------------+----------------------------------------------------+
 | | **Self-managed**                               | * Guests can create their own accounts.            |
 | | For parent-child learning, homeschooling       | * Users can edit their account information.        |
-| | or suplementary individual learning.           |                                                    |
+| | or supplementary individual learning.          |                                                    |
 +--------------------------------------------------+----------------------------------------------------+
 | | **Informal and personal use**                  | * Guests can create their own accounts.            |
 | | For libraries, orphanages, correctional        | * Users can edit their account information.        |
@@ -62,4 +63,4 @@ To do the initial setup of after the installation, follow these steps.
 
 	   View the Facility setup details.
 
-#. Once you finish the initial setup, proceed to :ref:`import some content <manage_content_ref>`, and :ref:`create users <manage_users_ref>` (if you chose the Admin-managed facility setup). Make sure to check how to :ref:`configure other computers <access_LAN>` in the network to access Kolibri.
+Once you finish the initial setup, proceed to :ref:`import some content <manage_content_ref>`, and :ref:`create users <manage_users_ref>` (if you chose the Admin-managed facility setup). Make sure to check how to :ref:`configure other computers <access_LAN>` in the network to access Kolibri.
