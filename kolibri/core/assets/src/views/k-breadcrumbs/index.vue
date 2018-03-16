@@ -6,7 +6,11 @@
         <ui-icon-button :hasDropdown="true" icon="expand_more" size="small">
           <div slot="dropdown" class="breadcrumbs-dropdown">
             <ol class="breadcrumbs-dropdown-items">
-              <li v-for="(crumb, index) in collapsedCrumbs" class="breadcrumbs-dropdown-item" :key="index">
+              <li
+                v-for="(crumb, index) in collapsedCrumbs"
+                class="breadcrumbs-dropdown-item"
+                :key="index"
+              >
                 <k-router-link
                   :text="crumb.text"
                   :to="crumb.link"
@@ -240,8 +244,8 @@
   @require '~kolibri.styles.definitions'
 
   .breadcrumbs
-    margin-top: 24px
-    margin-bottom: 24px
+    margin-top: 8px
+    margin-bottom: 8px
     font-size: 16px
     font-weight: bold
 

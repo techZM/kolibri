@@ -14,7 +14,6 @@ import router from 'kolibri.coreVue.router';
 import * as CoreActions from 'kolibri.coreVue.vuex.actions';
 import { ContentNodeKinds, CollectionKinds } from 'kolibri.coreVue.vuex.constants';
 import { PageNames } from '../../constants';
-import { EXAM_MODIFICATION_SNACKBAR } from '../../examConstants';
 import { setClassState } from './main';
 import { createQuestionList, selectQuestionFromExercise } from 'kolibri.utils.exams';
 import { assessmentMetaDataState } from 'kolibri.coreVue.vuex.mappers';
@@ -144,7 +143,7 @@ function showExamsPage(store, classId) {
 
   const promises = [
     LearnerGroupResource.getCollection({ parent: classId }).fetch(),
-    ChannelResource.getCollection().fetch(),
+    ChannelResource.getCollection({ available: true, has_exercise: true }).fetch(),
     ExamResource.getCollection({ collection: classId }).fetch({}, true),
     setClassState(store, classId),
   ];
@@ -204,7 +203,7 @@ function deactivateExam(store, examId) {
 function _assignExamTo(examId, collection) {
   const assignmentPayload = {
     exam: examId,
-    collection,
+    collection: collection.id,
   };
   return new Promise((resolve, reject) => {
     ExamAssignmentResource.createModel(assignmentPayload)
@@ -382,7 +381,7 @@ function showCreateExamPage(store, classId, channelId) {
   store.dispatch('SET_PAGE_NAME', PageNames.CREATE_EXAM);
   store.dispatch('CORE_SET_TITLE', translator.$tr('coachExamCreationPageTitle'));
 
-  const channelPromise = ChannelResource.getCollection().fetch();
+  const channelPromise = ChannelResource.getCollection({ available: true }).fetch();
   const examsPromise = ExamResource.getCollection({
     collection: classId,
   }).fetch({}, true);
@@ -637,10 +636,6 @@ function showExamReportDetailPage(
   );
 }
 
-function showExamModificationSnackbar(store) {
-  store.dispatch('CORE_SET_CURRENT_SNACKBAR', EXAM_MODIFICATION_SNACKBAR);
-}
-
 export {
   displayExamModal,
   showExamsPage,
@@ -658,5 +653,4 @@ export {
   addExercise,
   removeExercise,
   getAllExercisesWithinTopic,
-  showExamModificationSnackbar,
 };

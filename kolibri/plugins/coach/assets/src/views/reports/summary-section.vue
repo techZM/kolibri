@@ -81,8 +81,10 @@
       lastActive: 'Last active',
       lastActiveText: '{0, date, medium}',
       na: '-',
-      exerciseCountText: '{count, number, integer} {count, plural, one {Exercise} other {Exercises}}',
-      contentCountText: '{count, number, integer} {count, plural, one {Resource} other {Resources}}',
+      exerciseCountText:
+        '{count, number, integer} {count, plural, one {exercise} other {exercises}}',
+      contentCountText:
+        '{count, number, integer} {count, plural, one {resource} other {resources}}',
       mastered: 'Completed',
       watched: 'Watched',
       listened: 'Listened',

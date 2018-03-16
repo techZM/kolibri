@@ -9,7 +9,10 @@
       >
         <div
           class="side-nav-header"
-          :style="{ height: headerHeight + 'px', width: `${width}px`, paddingTop: mobile ? '4px' : '8px' }"
+          :style="{
+            height: headerHeight + 'px',
+            width: `${width}px`, paddingTop: mobile ? '4px' : '8px'
+          }"
         >
           <ui-icon-button
             ref="toggleButton"
@@ -20,7 +23,7 @@
             icon="close"
             @click="toggleNav"
           />
-          <span class="side-nav-header-name">Kolibri</span>
+          <span class="side-nav-header-name">{{ $tr('kolibri') }}</span>
         </div>
 
         <div
@@ -87,6 +90,7 @@
     },
     mixins: [responsiveWindow, responsiveElement],
     $trs: {
+      kolibri: 'Kolibri',
       navigationLabel: 'Main user navigation',
       learn: 'Learn',
       facility: 'Facility',
@@ -156,7 +160,7 @@
             label: this.$tr('facility'),
             active: this.pageIsActive(TopLevelPageNames.MANAGE),
             icon: 'settings_input_antenna',
-            href: '/management/facility',
+            href: '/facility',
           });
         }
         if (this.canManageContent || this.isSuperuser) {
@@ -164,7 +168,7 @@
             label: this.$tr('device'),
             active: this.pageIsActive(TopLevelPageNames.DEVICE),
             icon: 'tablet_mac',
-            href: '/management/device',
+            href: '/device',
           });
         }
         options.push({ type: 'divider' });
@@ -255,7 +259,9 @@
   @require '~kolibri.styles.definitions'
 
   // matches angular material's spec
-  $side-nav-box-shadow = 0 2px 4px -1px rgba(0, 0, 0, 0.2), 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12)
+  $side-nav-box-shadow =  0 2px 4px -1px rgba(0, 0, 0, 0.2),
+                          0 4px 5px 0 rgba(0, 0, 0, 0.14),
+                          0 1px 10px 0 rgba(0, 0, 0, 0.12)
 
   // matches keen-ui toolbar's spec
   $side-nav-header-box-shadow = 0 0 2px rgba(black, 0.12), 0 2px 2px rgba(black, 0.2)
@@ -318,14 +324,12 @@
     padding: 16px
 
   .side-nav-scrollable-area-footer-logo
-    width: 40px
-    height: 40px
+    height: 77px
+    max-width: 100%
 
   .side-nav-scrollable-area-footer-info
-    display: inline-block
-    margin-left: 8px
-    width: 140px
-    font-size: 10px
+    margin-top: 8px
+    font-size: 12px
     line-height: 16px
     p
       margin: 0

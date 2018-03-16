@@ -5,9 +5,8 @@
     :class="buttonClasses"
     :type="type"
     :disabled="disabled"
-    @click="handleClick">
-    {{ text }}
-  </button>
+    @click="handleClick"
+  ><!-- no whitespace -->{{ text }}<!-- no whitespace --></button>
 
 </template>
 

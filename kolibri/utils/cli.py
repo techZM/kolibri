@@ -1,4 +1,6 @@
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 
 import importlib  # noqa
 import logging  # noqa
@@ -14,13 +16,18 @@ env.set_env()
 
 import kolibri  # noqa
 import django  # noqa
+
 from django.core.management import call_command  # noqa
+from django.core.exceptions import AppRegistryNotReady  # noqa
+from django.db.utils import DatabaseError  # noqa
+from sqlite3 import DatabaseError as SQLite3DatabaseError  # noqa
 from docopt import docopt  # noqa
 
 from kolibri.core.deviceadmin.utils import IncompatibleDatabase  # noqa
 
 from . import server  # noqa
 from .system import become_daemon  # noqa
+from .sanity_checks import check_other_kolibri_running  # noqa
 
 USAGE = """
 Kolibri
@@ -100,12 +107,32 @@ class PluginDoesNotExist(Exception):
     """
 
 
+class PluginBaseLoadsApp(Exception):
+    """
+    An exception raised in case a kolibri_plugin.py results in loading of the
+    Django app stack.
+    """
+    pass
+
+
+def _get_kolibri_home():
+    """
+    This is preferred to be called through a function as KOLIBRI_HOME is
+    redefined during tests.
+
+    NEEDS TO BE FURTHER CLEANED UP AND CENTRALIZED.
+
+    Please do not expand use of this function to other modules.
+    """
+    return os.path.abspath(os.path.expanduser(os.environ["KOLIBRI_HOME"]))
+
+
 def version_file():
     """
     During test runtime, this path may differ because KOLIBRI_HOME is
     regenerated
     """
-    return os.path.join(os.environ['KOLIBRI_HOME'], '.data_version')
+    return os.path.join(_get_kolibri_home(), '.data_version')
 
 
 def initialize(debug=False):
@@ -164,6 +191,7 @@ def _migrate_databases():
     from django.conf import settings
     for database in settings.DATABASES:
         call_command("migrate", interactive=False, database=database)
+
 
 def _first_run():
     """
@@ -247,12 +275,9 @@ def start(port=None, daemon=True):
     # https://github.com/learningequality/kolibri/issues/1615
     update()
 
-    if port is None:
-        try:
-            port = int(os.environ['KOLIBRI_LISTEN_PORT'])
-        except ValueError:
-            logger.error("Invalid KOLIBRI_LISTEN_PORT, must be an integer")
-            raise
+    # In case that some tests run start() function only
+    if not isinstance(port, int):
+        port = _get_port(port)
 
     if not daemon:
         logger.info("Running 'kolibri start' in foreground...")
@@ -299,6 +324,7 @@ def stop():
         pid, __, __ = server.get_status()
         server.stop(pid=pid)
         stopped = True
+        logger.info("Kolibri server has successfully been stoppped.")
     except server.NotRunning as e:
         verbose_status = "{msg:s} ({code:d})".format(
             code=e.status_code,
@@ -435,13 +461,21 @@ def get_kolibri_plugin(plugin_name):
             if _is_plugin(obj):
                 plugin_classes.append(obj)
     except ImportError as e:
-        if str(e).startswith("No module named"):
-            raise PluginDoesNotExist(
-                "Plugin '{}' does not seem to exist. Is it on the PYTHONPATH?".
-                format(plugin_name)
-            )
+        # Python 2: message, Python 3: msg
+        exc_message = getattr(e, 'message', getattr(e, 'msg', None))
+        if exc_message.startswith("No module named"):
+            msg = (
+                "Plugin '{}' does not seem to exist. Is it on the PYTHONPATH?"
+            ).format(plugin_name)
+            raise PluginDoesNotExist(msg)
         else:
             raise
+    except AppRegistryNotReady:
+        msg = (
+            "Plugin '{}' loads the Django app registry, which it isn't "
+            "allowed to do while enabling or disabling itself."
+        ).format(plugin_name)
+        raise PluginBaseLoadsApp(msg)
 
     if not plugin_classes:
         # There's no clear use case for a plugin without a KolibriPluginBase
@@ -453,19 +487,19 @@ def get_kolibri_plugin(plugin_name):
     return plugin_classes
 
 
-def plugin(plugin_name, **args):
+def plugin(plugin_name, **kwargs):
     """
     Receives a plugin identifier and tries to load its main class. Calls class
     functions.
     """
     from kolibri.utils import conf
 
-    if args.get('enable', False):
+    if kwargs.get('enable', False):
         plugin_classes = get_kolibri_plugin(plugin_name)
         for klass in plugin_classes:
             klass.enable()
 
-    if args.get('disable', False):
+    if kwargs.get('disable', False):
         try:
             plugin_classes = get_kolibri_plugin(plugin_name)
             for klass in plugin_classes:
@@ -553,7 +587,18 @@ def parse_args(args=None):
     return docopt(USAGE, **docopt_kwargs), django_args
 
 
-def main(args=None):
+def _get_port(port):
+    port = int(port) if port else None
+    if port is None:
+        try:
+            port = int(os.environ['KOLIBRI_LISTEN_PORT'])
+        except ValueError:
+            logger.error("Invalid KOLIBRI_LISTEN_PORT, must be an integer")
+            raise
+    return port
+
+
+def main(args=None):  # noqa: max-complexity=13
     """
     Kolibri's main function. Parses arguments and calls utility functions.
     Utility functions should be callable for unit testing purposes, but remember
@@ -566,7 +611,36 @@ def main(args=None):
 
     debug = arguments['--debug']
 
-    initialize(debug=debug)
+    if arguments['start']:
+        port = _get_port(arguments['--port'])
+        check_other_kolibri_running(port)
+
+    try:
+        initialize(debug=debug)
+    except (DatabaseError, SQLite3DatabaseError) as e:
+        from django.conf import settings
+        if "malformed" in str(e):
+            recover_cmd = (
+                "    sqlite3 {path} .dump | sqlite3 fixed.db \n"
+                "    cp fixed.db {path}"
+                ""
+            ).format(
+                path=settings.DATABASES['default']['NAME'],
+            )
+            logger.error(
+                "\n"
+                "Your database is corrupted. This is a "
+                "known issue that is usually fixed by running this "
+                "command: "
+                "\n\n" +
+                recover_cmd +
+                "\n\n"
+                "Notice that you need the 'sqlite3' command available "
+                "on your system prior to running this."
+                "\n\n"
+            )
+            sys.exit(1)
+        raise
 
     # Alias
     if arguments['shell']:
@@ -584,8 +658,6 @@ def main(args=None):
         return
 
     if arguments['start']:
-        port = arguments['--port']
-        port = int(port) if port else None
         daemon = not arguments['--foreground']
         if sys.platform == 'darwin':
             daemon = False

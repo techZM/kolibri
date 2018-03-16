@@ -1,9 +1,26 @@
-.. :changelog:
-
 Release Notes
 =============
 
 Changes are ordered reverse-chronologically.
+
+0.8.0
+-----
+
+ - Added support for assigning content using 'Lessons'
+ - Updated default landing pages in Learn and Coach
+ - Added 'change password' functionality to 'Profile' page
+ - Updates to text consistency
+ - Languages: English, Spanish, Arabic, Farsi, Urdu, French, Haitian Creole, and Burmese
+ - Various bug fixes
+
+See a `more detailed list <https://github.com/learningequality/kolibri/issues?q=milestone%3A0.8.0+label%3Achangelog>`_ of changes on Github.
+
+
+0.7.2
+-----
+
+ - Fix issue with importing large channels on Windows
+ - Fix issue that prevented importing topic thumbnail files
 
 0.7.1
 -----
@@ -23,6 +40,12 @@ Changes are ordered reverse-chronologically.
  - Added 'device info' administrator page
  - Content search integration with Studio
  - Granular content import and export
+
+
+0.6.2
+-----
+
+ - Consistent ordering of channels in learner views
 
 
 0.6.1

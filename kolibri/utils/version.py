@@ -209,7 +209,8 @@ def get_version_from_git(get_git_describe_string):
     Fetches the latest git tag (NB! broken behavior!)
 
     :returns: A validated tuple, same format as kolibri.VERSION, but with extra
-    data suffixed. Example: (1, 2, 3, 'alpha', '1-123-f12345')
+        data suffixed. Example: (1, 2, 3, 'alpha', '1-123-f12345')
+
     """
     git_tag_validity_check = re.compile(
         r'v(?P<version>\d+\.\d+(\.\d+)?)'
@@ -256,8 +257,8 @@ def get_prerelease_version(version):
     Called when kolibri.VERSION is set to a non-final version:
 
     if version ==
-    *, *, *, "alpha", 0: Maps to latest commit timestamp
-    *, *, *, "alpha", >0: Uses latest git tag, asserting that there is such.
+    \*, \*, \*, "alpha", 0: Maps to latest commit timestamp
+    \*, \*, \*, "alpha", >0: Uses latest git tag, asserting that there is such.
     """
 
     mapping = {'alpha': 'a', 'beta': 'b', 'rc': 'rc'}
@@ -299,7 +300,8 @@ def get_prerelease_version(version):
 
         if git_version[3] == 'final' and version[3] != 'final':
             raise AssertionError(
-                "You have added a final tag without bumping kolibri.VERISON"
+                "You have added a final tag without bumping kolibri.VERSION, " +
+                "OR you need to make a new alpha0 tag. Current tag: {}".format(git_version)
             )
 
         return (

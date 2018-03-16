@@ -1,35 +1,33 @@
 <template>
 
-  <div>
+  <div class="content-renderer">
     <ui-alert v-if="noRendererAvailable" :dismissible="false" type="error">
       {{ $tr('rendererNotAvailable') }}
     </ui-alert>
-    <div v-else-if="available" class="fill-height">
-      <div class="content-wrapper">
-        <loading-spinner id="spinner" v-if="!currentViewClass" />
-        <component
-          v-else
-          :is="currentViewClass"
-          @startTracking="startTracking"
-          @stopTracking="stopTracking"
-          @updateProgress="updateProgress"
-          @answerGiven="answerGiven"
-          @hintTaken="hintTaken"
-          @itemError="itemError"
-          @interaction="interaction"
-          :files="availableFiles"
-          :defaultFile="defaultFile"
-          :itemId="itemId"
-          :answerState="answerState"
-          :allowHints="allowHints"
-          :supplementaryFiles="supplementaryFiles"
-          :thumbnailFiles="thumbnailFiles"
-          :interactive="interactive"
-          :lang="lang"
-          ref="contentView"
-        />
-      </div>
-    </div>
+    <template v-else-if="available">
+      <loading-spinner id="spinner" v-if="!currentViewClass" />
+      <component
+        v-else
+        :is="currentViewClass"
+        @startTracking="startTracking"
+        @stopTracking="stopTracking"
+        @updateProgress="updateProgress"
+        @answerGiven="answerGiven"
+        @hintTaken="hintTaken"
+        @itemError="itemError"
+        @interaction="interaction"
+        :files="availableFiles"
+        :defaultFile="defaultFile"
+        :itemId="itemId"
+        :answerState="answerState"
+        :allowHints="allowHints"
+        :supplementaryFiles="supplementaryFiles"
+        :thumbnailFiles="thumbnailFiles"
+        :interactive="interactive"
+        :lang="lang"
+        ref="contentView"
+      />
+    </template>
     <div v-else>
       {{ $tr('msgNotAvailable') }}
     </div>
@@ -85,8 +83,14 @@
         type: Boolean,
         default: false,
       },
-      itemId: { default: null },
-      answerState: { default: null },
+      itemId: {
+        type: String,
+        default: null,
+      },
+      answerState: {
+        type: Object,
+        default: null,
+      },
       allowHints: {
         type: Boolean,
         default: true,
@@ -122,7 +126,9 @@
         return this.files.filter(file => !file.thumbnail && !file.supplementary && file.available);
       },
       defaultFile() {
-        return this.availableFiles && this.availableFiles.length ? this.availableFiles[0] : undefined;
+        return this.availableFiles && this.availableFiles.length
+          ? this.availableFiles[0]
+          : undefined;
       },
       supplementaryFiles() {
         return this.files.filter(file => file.supplementary && file.available);
@@ -144,7 +150,8 @@
       updateRendererComponent() {
         // Assume we will find a renderer until we find out otherwise.
         this.noRendererAvailable = false;
-        // Only bother to do this is if the node is available, and the kind and extension are defined.
+        // Only bother to do this is if the node is available,
+        // and the kind and extension are defined.
         // Otherwise the template can handle it.
         if (this.available && this.kind && this.extension) {
           return Promise.all([
@@ -206,10 +213,7 @@
 
   @require '~kolibri.styles.definitions'
 
-  .fill-height
-    height: 100%
-
-  .content-wrapper
+  .content-renderer
     height: 100%
 
   #spinner
