@@ -121,7 +121,7 @@
     isCoach,
     isLearner,
     totalPoints,
-    getUserRole,
+    getUserKind,
     getUserPermissions,
     userHasPermissions,
   } from 'kolibri.coreVue.vuex.getters';
@@ -140,7 +140,7 @@
     name: 'profilePage',
     $trs: {
       genericError: 'Something went wrong',
-      success: 'Profile details updated!',
+      success: 'Profile details updated',
       username: 'Username',
       name: 'Full name',
       updateProfile: 'Save changes',
@@ -179,11 +179,11 @@
     },
     computed: {
       role() {
-        if (this.getUserRole === UserKinds.ADMIN) {
+        if (this.getUserKind === UserKinds.ADMIN) {
           return this.$tr('isAdmin');
-        } else if (this.getUserRole === UserKinds.COACH) {
+        } else if (this.getUserKind === UserKinds.COACH) {
           return this.$tr('isCoach');
-        } else if (this.getUserRole === UserKinds.LEARNER) {
+        } else if (this.getUserKind === UserKinds.LEARNER) {
           return this.$tr('isLearner');
         }
         return '';
@@ -307,7 +307,7 @@
         backendErrorMessage: state => state.pageState.errorMessage,
         success: state => state.pageState.success,
         passwordModalVisible: state => state.pageState.passwordState.modal,
-        getUserRole,
+        getUserKind,
         getUserPermissions,
         userHasPermissions,
       },

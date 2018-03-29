@@ -87,8 +87,20 @@ oriented data synchronization.
 <script>
 
   import responsiveWindow from 'kolibri.coreVue.mixins.responsiveWindow';
-  import * as getters from 'kolibri.coreVue.vuex.getters';
-  import * as actions from 'kolibri.coreVue.vuex.actions';
+  import { isUserLoggedIn } from 'kolibri.coreVue.vuex.getters';
+  import {
+    initMasteryLog,
+    createDummyMasteryLog,
+    saveMasteryLog,
+    saveAndStoreMasteryLog,
+    setMasteryLogComplete,
+    createAttemptLog,
+    saveAttemptLog,
+    saveAndStoreAttemptLog,
+    updateMasteryAttemptState,
+    updateAttemptLogInteractionHistory,
+    updateExerciseProgress,
+  } from 'kolibri.coreVue.vuex.actions';
   import { InteractionTypes, MasteryModelGenerators } from 'kolibri.coreVue.vuex.constants';
   import seededShuffle from 'kolibri.lib.seededshuffle';
   import { now } from 'kolibri.utils.serverClock';
@@ -109,8 +121,8 @@ oriented data synchronization.
     mixins: [responsiveWindow],
     $trs: {
       goal:
-        'Try to get {count, number, integer} {count, plural, one {check mark} other {check marks}} to show up:',
-      tryAgain: 'Try again!',
+        'Try to get {count, number, integer} {count, plural, one {check mark} other {check marks}} to show up',
+      tryAgain: 'Try again',
       correct: 'Correct!',
       check: 'Check',
       next: 'Next question',
@@ -231,7 +243,7 @@ oriented data synchronization.
         answerState,
         simpleAnswer,
       }) {
-        this.updateMasteryAttemptStateAction({
+        this.updateMasteryAttemptState({
           currentTime: now(),
           correct,
           complete,
@@ -243,16 +255,16 @@ oriented data synchronization.
       },
       saveAttemptLogMasterLog(updateStore = true) {
         if (updateStore) {
-          this.saveAndStoreAttemptLogAction().then(() => {
+          this.saveAndStoreAttemptLog().then(() => {
             if (this.isUserLoggedIn && this.success) {
-              this.setMasteryLogCompleteAction(now());
-              this.saveAndStoreMasteryLogAction();
+              this.setMasteryLogComplete(now());
+              this.saveAndStoreMasteryLog();
             }
           });
         } else {
-          this.saveAttemptLogAction().then(() => {
+          this.saveAttemptLog().then(() => {
             if (this.isUserLoggedIn && this.success) {
-              this.saveMasteryLogAction();
+              this.saveMasteryLog();
             }
           });
         }
@@ -279,7 +291,7 @@ oriented data synchronization.
             this.shake = true;
           }
         }
-        this.updateAttemptLogInteractionHistoryAction({
+        this.updateAttemptLogInteractionHistory({
           type: InteractionTypes.answer,
           answer: answerState,
           correct,
@@ -307,7 +319,7 @@ oriented data synchronization.
         }
       },
       hintTaken({ answerState }) {
-        this.updateAttemptLogInteractionHistoryAction({
+        this.updateAttemptLogInteractionHistory({
           type: InteractionTypes.hint,
           answer: answerState,
         });
@@ -345,14 +357,14 @@ oriented data synchronization.
         this.correct = 0;
         this.itemError = false;
         this.setItemId();
-        this.createAttemptLog();
+        this.callCreateAttemptLog();
       },
-      initMasteryLog() {
-        this.initMasteryLogAction(this.masterySpacingTime, this.masteryModel);
+      callInitMasteryLog() {
+        this.initMasteryLog(this.masterySpacingTime, this.masteryModel);
       },
-      createAttemptLog() {
+      callCreateAttemptLog() {
         this.ready = false;
-        this.createAttemptLogAction(this.itemId);
+        this.createAttemptLog(this.itemId);
         this.ready = true;
       },
       updateExerciseProgressMethod() {
@@ -361,16 +373,16 @@ oriented data synchronization.
       },
       sessionInitialized() {
         if (this.isUserLoggedIn) {
-          this.initMasteryLog();
+          this.callInitMasteryLog();
         } else {
-          this.createDummyMasteryLogAction();
+          this.createDummyMasteryLog();
         }
         this.nextQuestion();
         this.$emit('sessionInitialized');
       },
       handleItemError() {
         this.itemError = true;
-        this.updateAttemptLogInteractionHistoryAction({
+        this.updateAttemptLogInteractionHistory({
           type: InteractionTypes.error,
         });
         this.complete = true;
@@ -397,20 +409,20 @@ oriented data synchronization.
     },
     vuex: {
       actions: {
-        initMasteryLogAction: actions.initMasteryLog,
-        createDummyMasteryLogAction: actions.createDummyMasteryLog,
-        saveMasteryLogAction: actions.saveMasteryLog,
-        saveAndStoreMasteryLogAction: actions.saveAndStoreMasteryLog,
-        setMasteryLogCompleteAction: actions.setMasteryLogComplete,
-        createAttemptLogAction: actions.createAttemptLog,
-        saveAttemptLogAction: actions.saveAttemptLog,
-        saveAndStoreAttemptLogAction: actions.saveAndStoreAttemptLog,
-        updateMasteryAttemptStateAction: actions.updateMasteryAttemptState,
-        updateAttemptLogInteractionHistoryAction: actions.updateAttemptLogInteractionHistory,
-        updateExerciseProgress: actions.updateExerciseProgress,
+        initMasteryLog,
+        createDummyMasteryLog,
+        saveMasteryLog,
+        saveAndStoreMasteryLog,
+        setMasteryLogComplete,
+        createAttemptLog,
+        saveAttemptLog,
+        saveAndStoreAttemptLog,
+        updateMasteryAttemptState,
+        updateAttemptLogInteractionHistory,
+        updateExerciseProgress,
       },
       getters: {
-        isUserLoggedIn: getters.isUserLoggedIn,
+        isUserLoggedIn,
         mastered: state => state.core.logging.mastery.complete,
         totalattempts: state => state.core.logging.mastery.totalattempts,
         pastattempts: state => state.core.logging.mastery.pastattempts,

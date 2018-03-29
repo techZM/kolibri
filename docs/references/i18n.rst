@@ -130,7 +130,11 @@ And this command will upload the strings to Crowdin:
 
 The branch name will typically look something like: ``release-v0.8.x``
 
-Next, apply `translation memory <https://support.crowdin.com/translation-memory/#applying-translation-memory-via-pre-translation>`_ via the Crowdin UI to copy over perfect matches from previous releases for all languages. This could take some time.
+Next, apply `translation memory <https://support.crowdin.com/translation-memory/#applying-translation-memory-via-pre-translation>`_ via the Crowdin UI to copy over perfect matches from previous releases for all languages. Use settings like this:
+
+.. image:: ./translation-memory.png
+
+This could take some time.
 
 Now, some percentage of the newly updated strings should show as already having been translated in crowdin because the perfect matches were automatically copied over.
 
@@ -139,6 +143,12 @@ Fetching and building translations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In order to get the newly translated strings into the application, they need to be downloaded from Crowdin and checked in to the Kolibri github repo.
+
+First, make sure to build the project using the Crowdin website. This is under:
+
+.. code-block::
+
+    Projects -> Kolibri -> Settings -> Build & Download -> Build Project
 
 .. warning:: By default Crowdin will download all translations, not just approved ones. It will often download untranslated strings also. You must manually delete files that are not relevant.
 

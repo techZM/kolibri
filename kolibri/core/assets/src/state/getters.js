@@ -7,7 +7,10 @@ function isAdmin(state) {
 }
 
 function isCoach(state) {
-  return state.core.session.kind.includes(UserKinds.COACH);
+  return (
+    state.core.session.kind.includes(UserKinds.COACH) ||
+    state.core.session.kind.includes(UserKinds.ASSIGNABLE_COACH)
+  );
 }
 
 function isLearner(state) {
@@ -18,7 +21,7 @@ function isUserLoggedIn(state) {
   return !state.core.session.kind.includes(UserKinds.ANONYMOUS);
 }
 
-function getUserRole(state) {
+function getUserKind(state) {
   if (isAdmin(state)) {
     return UserKinds.ADMIN;
   } else if (isCoach(state)) {
@@ -56,6 +59,10 @@ function currentUserId(state) {
 
 function facilityConfig(state) {
   return state.core.facilityConfig;
+}
+
+function facilities(state) {
+  return state.core.facilities;
 }
 
 function getChannels(state) {
@@ -110,9 +117,10 @@ export {
   contentPoints,
   currentUserId,
   facilityConfig,
+  facilities,
   sessionTimeSpent,
   canManageContent,
-  getUserRole,
+  getUserKind,
   getUserPermissions,
   userHasPermissions,
   connected,

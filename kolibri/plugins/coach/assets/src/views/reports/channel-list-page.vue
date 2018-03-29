@@ -1,6 +1,7 @@
 <template>
 
   <div>
+    <breadcrumbs />
     <template v-if="showRecentOnly">
       <h1>{{ $tr('recentTitle') }}</h1>
       <p v-if="standardDataTable.length">{{ $tr('showingRecent', { threshold }) }}</p>
@@ -32,23 +33,17 @@
         </tr>
       </thead>
       <tbody slot="tbody">
-        <template v-for="channel in standardDataTable">
-          <tr :key="channel.id">
-            <td class="core-table-icon-col">
-              <content-icon :kind="CHANNEL" />
-            </td>
-            <name-cell
-              :kind="CHANNEL"
-              :title="channel.title"
-              :link="reportLink(channel.id)"
-              :key="channel.id"
-            />
-            <activity-cell
-              :date="channel.lastActive"
-              :key="channel.id"
-            />
-          </tr>
-        </template>
+        <tr v-for="channel in standardDataTable" :key="channel.id">
+          <td class="core-table-icon-col">
+            <content-icon :kind="CHANNEL" />
+          </td>
+          <name-cell
+            :kind="CHANNEL"
+            :title="channel.title"
+            :link="reportLink(channel.id)"
+          />
+          <activity-cell :date="channel.lastActive" />
+        </tr>
       </tbody>
     </core-table>
   </div>
@@ -58,22 +53,24 @@
 
 <script>
 
-  import CoreTable from 'kolibri.coreVue.components.CoreTable';
+  import coreTable from 'kolibri.coreVue.components.coreTable';
   import contentIcon from 'kolibri.coreVue.components.contentIcon';
   import { ContentNodeKinds } from 'kolibri.coreVue.vuex.constants';
   import { getChannels } from 'kolibri.coreVue.vuex.getters';
   import { PageNames } from '../../constants';
-  import * as reportConstants from '../../reportConstants';
-  import * as reportGetters from '../../state/getters/reports';
+  import { TableColumns, RECENCY_THRESHOLD_IN_DAYS } from '../../constants/reportConstants';
+  import { standardDataTable } from '../../state/getters/reports';
   import headerCell from './table-cells/header-cell';
   import nameCell from './table-cells/name-cell';
   import activityCell from './table-cells/activity-cell';
   import alignMixin from './align-mixin';
+  import breadcrumbs from './breadcrumbs';
   export default {
-    name: 'coachRecentPageChannelList',
+    name: 'channelListPage',
     components: {
+      breadcrumbs,
       contentIcon,
-      CoreTable,
+      coreTable,
       headerCell,
       nameCell,
       activityCell,
@@ -94,10 +91,10 @@
         return ContentNodeKinds.CHANNEL;
       },
       tableColumns() {
-        return reportConstants.TableColumns;
+        return TableColumns;
       },
       threshold() {
-        return reportConstants.RECENCY_THRESHOLD_IN_DAYS;
+        return RECENCY_THRESHOLD_IN_DAYS;
       },
     },
     methods: {
@@ -119,7 +116,7 @@
     vuex: {
       getters: {
         channels: getChannels,
-        standardDataTable: reportGetters.standardDataTable,
+        standardDataTable,
         classId: state => state.classId,
         pageName: state => state.pageName,
         showRecentOnly: state => state.pageState.showRecentOnly,

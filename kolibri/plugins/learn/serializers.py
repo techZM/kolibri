@@ -1,12 +1,14 @@
+from django.db.models import Q
 from django.db.models import Sum
+from rest_framework.serializers import JSONField
+from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import SerializerMethodField
+
 from kolibri.auth.models import Classroom
 from kolibri.core.exams.models import Exam
 from kolibri.core.lessons.models import Lesson
 from kolibri.logger.models import ContentSummaryLog
 from kolibri.logger.models import ExamLog
-from rest_framework.serializers import JSONField
-from rest_framework.serializers import ModelSerializer
-from rest_framework.serializers import SerializerMethodField
 
 
 class ExamProgressSerializer(ModelSerializer):
@@ -102,13 +104,12 @@ class LearnerClassroomSerializer(ModelSerializer):
             lesson_assignments__collection__in=learner_groups,
             collection=instance,
             is_active=True,
-        )
+        ).distinct()
 
         filtered_exams = Exam.objects.filter(
             assignments__collection__in=learner_groups,
             collection=instance,
-            active=True,
-        )
+        ).filter(Q(active=True) | Q(examlogs__user=current_user)).distinct()
 
         return {
             'lessons': LessonProgressSerializer(

@@ -7,79 +7,143 @@
 
 <script>
 
-  import find from 'lodash/find';
-  import { getChannels } from 'kolibri.coreVue.vuex.getters';
-  import * as CoachConstants from '../../constants';
-  import * as coachGetters from '../../state/getters/main';
+  import { getChannels, getChannelObject } from 'kolibri.coreVue.vuex.getters';
+  import { PageNames } from '../../constants';
+  import {
+    isTopicPage,
+    isRecentPage,
+    isLearnerPage,
+    numberOfAssignedClassrooms,
+  } from '../../state/getters/main';
   import kBreadcrumbs from 'kolibri.coreVue.components.kBreadcrumbs';
   export default {
-    name: 'reportBreadcrumbs',
-    $trs: { channels: 'Channels' },
+    name: 'breadcrumbs',
+    $trs: {
+      allClassroomsText: 'Classes',
+      channels: 'Channels',
+      learners: 'Learners',
+    },
     components: { kBreadcrumbs },
     computed: {
       channelTitle() {
-        return find(this.channels, channel => channel.id === this.pageState.channelId).title;
+        return this.pageState.channelId
+          ? this.getChannelObject(this.pageState.channelId).title
+          : '';
+      },
+      classroomCrumbs() {
+        // Only show these first two crumbs if Coach is assigned to 2+ Classrooms
+        if (this.numberOfAssignedClassrooms < 2) {
+          return [];
+        }
+        const { name, id } = this.currentClassroom;
+        return [
+          {
+            text: this.$tr('allClassroomsText'),
+            link: { name: PageNames.CLASS_LIST },
+          },
+          {
+            text: name,
+            link: {
+              name: this.rootPageName,
+              params: { classId: id },
+            },
+          },
+        ];
+      },
+      rootPageName() {
+        if (this.isLearnerPage) {
+          return PageNames.LEARNER_LIST;
+        }
+        if (this.isRecentPage) {
+          return PageNames.RECENT_CHANNELS;
+        }
+        if (this.isTopicPage) {
+          return PageNames.TOPIC_CHANNELS;
+        }
       },
       breadcrumbs() {
-        if (this.pageName === CoachConstants.PageNames.RECENT_ITEMS_FOR_CHANNEL) {
-          return this.recentChannelItemsCrumbs;
-        } else if (this.pageName === CoachConstants.PageNames.RECENT_LEARNERS_FOR_ITEM) {
+        return [...this.classroomCrumbs, ...this.subPageCrumbs].filter(Boolean);
+      },
+      subPageCrumbs() {
+        if (this.isLearnerPage) {
+          return this.learnerPageCrumbs;
+        }
+        if (this.isRecentPage) {
           return this.recentItemCrumbs;
-        } else if (this.isTopicPage) {
+        }
+        if (this.isTopicPage) {
           return this.topicCrumbs;
         }
         return [];
       },
-      recentChannelItemsCrumbs() {
+      learnerPageCrumbs() {
+        if (!this.isLearnerPage) return [];
         return [
           {
-            text: this.$tr('channels'),
+            text: this.$tr('learners'),
+            link: { name: PageNames.LEARNER_LIST },
+          },
+          this.currentLearnerForReport && {
+            text: this.currentLearnerForReport.name,
             link: {
-              name: CoachConstants.PageNames.RECENT_CHANNELS,
-              params: { classId: this.classId },
+              name: PageNames.LEARNER_CHANNELS,
+              params: {
+                userId: this.currentLearnerForReport.id,
+              },
             },
           },
-          { text: this.channelTitle },
+          // Crumbs for all preceding topics
+          ...(this.currentLearnerReportContentNode
+            ? this.learnerReportAncestorCrumbs(this.currentLearnerReportContentNode.ancestors)
+            : []),
+          // Crumb for the current Topic or Leaf Node
+          this.currentLearnerReportContentNode && {
+            text: this.currentLearnerReportContentNode.name,
+          },
         ];
       },
       recentItemCrumbs() {
+        if (!this.isRecentPage) return [];
+        const { title } = this.pageState.contentScopeSummary || {};
         return [
           {
             text: this.$tr('channels'),
             link: {
-              name: CoachConstants.PageNames.RECENT_CHANNELS,
+              name: PageNames.RECENT_CHANNELS,
               params: { classId: this.classId },
             },
           },
-          {
+          this.channelTitle && {
             text: this.channelTitle,
             link: {
-              name: CoachConstants.PageNames.RECENT_ITEMS_FOR_CHANNEL,
+              name: PageNames.RECENT_ITEMS_FOR_CHANNEL,
               params: {
                 classId: this.classId,
                 channelId: this.pageState.channelId,
               },
             },
           },
-          { text: this.pageState.contentScopeSummary.title },
-        ];
+          title && { text: title },
+        ].filter(Boolean);
       },
       topicCrumbs() {
+        if (!this.isTopicPage) return [];
+        const { ancestors = [], title } = this.pageState.contentScopeSummary;
         return [
           // link to the root channels page
           {
             text: this.$tr('channels'),
             link: {
-              name: CoachConstants.PageNames.TOPIC_CHANNELS,
+              name: PageNames.TOPIC_CHANNELS,
               params: { classId: this.classId },
             },
           },
           // links to each ancestor
-          ...this.pageState.contentScopeSummary.ancestors.map((item, index) => {
+          ...ancestors.map((item, index) => {
             const breadcrumb = { text: item.title };
             if (index) {
               breadcrumb.link = {
-                name: CoachConstants.PageNames.TOPIC_ITEM_LIST,
+                name: PageNames.TOPIC_ITEM_LIST,
                 params: {
                   classId: this.classId,
                   channelId: this.pageState.channelId,
@@ -89,7 +153,7 @@
             } else {
               // link to channel root
               breadcrumb.link = {
-                name: CoachConstants.PageNames.TOPIC_CHANNEL_ROOT,
+                name: PageNames.TOPIC_CHANNEL_ROOT,
                 params: {
                   classId: this.classId,
                   channelId: this.pageState.channelId,
@@ -99,7 +163,35 @@
             return breadcrumb;
           }),
           // current item
-          { text: this.pageState.contentScopeSummary.title },
+          title && { text: this.pageState.contentScopeSummary.title },
+        ].filter(Boolean);
+      },
+    },
+    methods: {
+      learnerReportAncestorCrumbs(ancestors) {
+        if (!ancestors || ancestors.length === 0) {
+          return [];
+        }
+        const [channel, ...topics] = ancestors;
+        return [
+          {
+            text: channel.title,
+            link: {
+              name: PageNames.LEARNER_CHANNEL_ROOT,
+              params: {
+                channelId: channel.id,
+              },
+            },
+          },
+          ...topics.map(topic => ({
+            text: topic.title,
+            link: {
+              name: PageNames.LEARNER_ITEM_LIST,
+              params: {
+                topicId: topic.id,
+              },
+            },
+          })),
         ];
       },
     },
@@ -109,7 +201,28 @@
         classId: state => state.classId,
         pageName: state => state.pageName,
         pageState: state => state.pageState,
-        isTopicPage: coachGetters.isTopicPage,
+        currentClassroom: state => state.currentClassroom,
+        isTopicPage,
+        isLearnerPage,
+        isRecentPage,
+        getChannelObject: state => getChannelObject.bind(null, state),
+        numberOfAssignedClassrooms,
+        currentLearnerForReport(state) {
+          if (state.pageState.userScope === 'user') {
+            return {
+              name: state.pageState.userScopeName,
+              id: state.pageState.userScopeId,
+            };
+          }
+        },
+        currentLearnerReportContentNode(state) {
+          if (state.pageState.contentScope) {
+            return {
+              name: state.pageState.contentScopeSummary.title,
+              ancestors: state.pageState.contentScopeSummary.ancestors,
+            };
+          }
+        },
       },
     },
   };

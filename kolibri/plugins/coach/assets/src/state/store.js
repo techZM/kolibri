@@ -7,6 +7,8 @@ export const initialState = {
   classId: null,
   className: null,
   classList: [],
+  classCoaches: [],
+  currentClassroom: {},
   busy: false,
 };
 
@@ -19,9 +21,11 @@ export const mutations = {
   SET_PAGE_NAME(state, pageName) {
     state.pageName = pageName;
   },
-  SET_CLASS_INFO(state, classId, className, classList) {
+  SET_CLASS_INFO(state, { classId, classList, currentClassroom }) {
+    state.currentClassroom = currentClassroom;
     state.classId = classId;
-    state.className = className;
+    state.className = currentClassroom ? currentClassroom.name : '';
+    state.classCoaches = currentClassroom ? currentClassroom.coaches : [];
     state.classList = classList;
   },
 
@@ -75,15 +79,18 @@ export const mutations = {
   SET_EXAMS(state, exams) {
     state.pageState.exams = exams;
   },
-  SET_EXAM_MODAL(state, modalName) {
-    state.pageState.examModalShown = modalName;
+  SET_EXAMS_MODAL(state, modalName) {
+    state.pageState.examsModalSet = modalName;
   },
   // etc
-  SET_SELETED_ATTEMPTLOG_INDEX(state, attemptLog) {
+  SET_SELECTED_ATTEMPT_LOG_INDEX(state, attemptLog) {
     state.pageState.selectedAttemptLogIndex = attemptLog;
   },
 
   SET_BUSY(state, isBusy) {
     state.pageState.busy = isBusy;
+  },
+  SET_TOOLBAR_TITLE(state, title) {
+    state.pageState.toolbarTitle = title;
   },
 };

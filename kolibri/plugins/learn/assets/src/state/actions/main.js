@@ -6,19 +6,22 @@ import {
   ExamAttemptLogResource,
 } from 'kolibri.resources';
 
-import {
-  getChannelObject,
-  isUserLoggedIn,
-  getChannels,
-  currentUserId,
-} from 'kolibri.coreVue.vuex.getters';
+import { getChannelObject, isUserLoggedIn, currentUserId } from 'kolibri.coreVue.vuex.getters';
 import {
   setChannelInfo,
   handleError,
   handleApiError,
   samePageCheckGenerator,
+  getFacilities,
+  getFacilityConfig,
 } from 'kolibri.coreVue.vuex.actions';
-import { createQuestionList, selectQuestionFromExercise } from 'kolibri.utils.exams';
+import {
+  createQuestionList,
+  selectQuestionFromExercise,
+  getExamReport,
+  canViewExam,
+  canViewExamReport,
+} from 'kolibri.utils.exams';
 import { ContentNodeKinds } from 'kolibri.coreVue.vuex.constants';
 import { PageNames, ClassesPageNames } from '../../constants';
 import { assessmentMetaDataState } from 'kolibri.coreVue.vuex.mappers';
@@ -37,6 +40,7 @@ const translator = createTranslator('topicTreeExplorationPageTitles', {
   searchPageTitle: 'Search',
   examsListPageTitle: 'Exams',
   currentExamPageTitle: '{ currentExamTitle} - { currentChannelTitle }',
+  examReportTitle: '{examTitle} report',
 });
 
 /**
@@ -151,8 +155,7 @@ export function updateContentNodeProgress(channelId, contentId, progressFraction
 
 export function setAndCheckChannels(store) {
   return setChannelInfo(store).then(
-    () => {
-      const channels = getChannels(store.state);
+    channels => {
       if (!channels.length) {
         router.replace({ name: PageNames.CONTENT_UNAVAILABLE });
       }
@@ -160,6 +163,7 @@ export function setAndCheckChannels(store) {
     },
     error => {
       handleApiError(store, error);
+      return error;
     }
   );
 }
@@ -205,6 +209,7 @@ export function showChannels(store) {
     },
     error => {
       handleApiError(store, error);
+      return error;
     }
   );
 }
@@ -239,6 +244,11 @@ export function showTopicsTopic(store, id, isRoot = false) {
         topic: _topicState(topic, ancestors),
         contents: topicContents,
       };
+      pageState.channel = currentChannel;
+      if (isRoot) {
+        topic.description = currentChannel.description;
+      }
+      pageState.topic = _topicState(topic, ancestors);
 
       store.dispatch('SET_PAGE_STATE', pageState);
 
@@ -403,9 +413,49 @@ export function calcQuestionsAnswered(attemptLogs) {
   return questionsAnswered;
 }
 
-export function showExam(store, examId, questionNumber) {
+export function showExamReport(store, classId, examId, questionNumber, questionInteraction) {
+  store.dispatch('CORE_SET_PAGE_LOADING', true);
+  store.dispatch('SET_PAGE_NAME', ClassesPageNames.EXAM_REPORT_VIEWER);
+
+  const userId = currentUserId(store.state);
+  const examReportPromise = getExamReport(
+    store,
+    examId,
+    userId,
+    questionNumber,
+    questionInteraction
+  );
+  ConditionalPromise.all([examReportPromise]).then(
+    ([examReport]) => {
+      if (canViewExamReport(examReport.exam, examReport.examLog)) {
+        store.dispatch('SET_PAGE_STATE', examReport);
+        store.dispatch('CORE_SET_ERROR', null);
+        store.dispatch(
+          'CORE_SET_TITLE',
+          translator.$tr('examReportTitle', {
+            examTitle: examReport.exam.title,
+          })
+        );
+        store.dispatch('CORE_SET_PAGE_LOADING', false);
+      } else {
+        router.replace({
+          name: ClassesPageNames.CLASS_ASSIGNMENTS,
+          params: { classId },
+        });
+      }
+    },
+    () =>
+      router.replace({
+        name: ClassesPageNames.CLASS_ASSIGNMENTS,
+        params: { classId },
+      })
+  );
+}
+export function showExam(store, classId, examId, questionNumber) {
   store.dispatch('CORE_SET_PAGE_LOADING', true);
   store.dispatch('SET_PAGE_NAME', ClassesPageNames.EXAM_VIEWER);
+  // Reset examAttemptLogs, so that it will not merge into another exam.
+  store.dispatch('RESET_EXAM_ATTEMPT_LOGS');
   const userId = currentUserId(store.state);
   const examParams = { user: userId, exam: examId };
 
@@ -424,10 +474,6 @@ export function showExam(store, examId, questionNumber) {
     ConditionalPromise.all(promises).only(
       samePageCheckGenerator(store),
       ([exam, examLogs, examAttemptLogs]) => {
-        if (exam.closed) {
-          return router.getInstance().replace({ name: ClassesPageNames.CLASS_ASSIGNMENTS });
-        }
-
         const currentChannel = getChannelObject(store.state, exam.channel_id);
         if (!currentChannel) {
           return router.replace({ name: PageNames.CONTENT_UNAVAILABLE });
@@ -436,27 +482,32 @@ export function showExam(store, examId, questionNumber) {
         // Local copy of exam attempt logs
         const attemptLogs = {};
 
-        if (userId) {
-          if (examLogs.length > 0 && examLogs.some(log => !log.closed)) {
-            store.dispatch('SET_EXAM_LOG', _examLoggingState(examLogs.find(log => !log.closed)));
-          } else {
-            ExamLogResource.createModel({ ...examParams, closed: false })
-              .save()
-              .then(newExamLog => {
-                store.dispatch('SET_EXAM_LOG', newExamLog);
-                return ExamLogResource.unCacheCollection(examParams);
-              });
-          }
-          // Sort through all the exam attempt logs retrieved and organize them into objects
-          // keyed first by content_id and then item id under that.
-          examAttemptLogs.forEach(log => {
-            const { content_id, item } = log;
-            if (!attemptLogs[content_id]) {
-              attemptLogs[content_id] = {};
-            }
-            attemptLogs[content_id][item] = { ...log };
-          });
+        if (examLogs.length > 0 && examLogs.some(log => !log.closed)) {
+          store.dispatch('SET_EXAM_LOG', _examLoggingState(examLogs.find(log => !log.closed)));
+        } else {
+          ExamLogResource.createModel({ ...examParams, closed: false })
+            .save()
+            .then(newExamLog => {
+              store.dispatch('SET_EXAM_LOG', newExamLog);
+              return ExamLogResource.unCacheCollection(examParams);
+            });
         }
+
+        if (!canViewExam(exam, store.state.examLog)) {
+          return router
+            .getInstance()
+            .replace({ name: ClassesPageNames.CLASS_ASSIGNMENTS, params: { classId } });
+        }
+
+        // Sort through all the exam attempt logs retrieved and organize them into objects
+        // keyed first by content_id and then item id under that.
+        examAttemptLogs.forEach(log => {
+          const { content_id, item } = log;
+          if (!attemptLogs[content_id]) {
+            attemptLogs[content_id] = {};
+          }
+          attemptLogs[content_id][item] = { ...log };
+        });
 
         const seed = exam.seed;
         const questionSources = exam.question_sources;
@@ -616,7 +667,10 @@ export function setAndSaveCurrentExamAttemptLog(store, contentId, itemId, curren
         // Add this attempt log to the Collection for future caching.
         examAttemptLogCollection.set(examAttemptLogModel);
         resolve();
-      })
+      }),
+    () => {
+      this.$router.replace({ name: ClassesPageNames.CLASS_ASSIGNMENTS });
+    }
   );
 }
 
@@ -631,4 +685,10 @@ export function closeExam(store) {
     .catch(error => {
       handleApiError(store, error);
     });
+}
+
+export function setFacilitiesAndConfig(store) {
+  return getFacilities(store).then(() => {
+    return getFacilityConfig(store);
+  });
 }
