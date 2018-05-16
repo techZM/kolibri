@@ -3,6 +3,30 @@ Release Notes
 
 Changes are ordered reverse-chronologically.
 
+0.9.2
+-----
+
+ - Various bug fixes
+ - Languages: English, Arabic, Bengali, Chinyanja, Farsi, French, Hindi, Marathi, Portuguese, Spanish, Swahili, Tamil,   Telugu, Urdu, Yoruba, and Zulu
+
+See a `more detailed list <https://github.com/learningequality/kolibri/issues?q=milestone%3A0.9.2+label%3Achangelog>`_ of changes on Github.
+
+
+0.9.1
+-----
+
+ - Fixed regression that caused very slow imports of large channels
+ - Adds new 'import users' command to the command-line
+ - Various consistency and layout updates
+ - Exercises with an error no longer count as 'correct'
+ - Fixed issue with password-less sign-on
+ - Fixed issue with editing lessons
+ - Various other fixes
+ - Languages: English, Arabic, Chinyanja, Farsi, French, Hindi, Marathi, Portuguese, Spanish, Swahili, Tamil, Telugu, and Urdu
+
+See a `more detailed list <https://github.com/learningequality/kolibri/issues?q=milestone%3A0.9.1+label%3Achangelog>`_ of changes on Github.
+
+
 0.9.0
 -----
 
@@ -19,7 +43,7 @@ Changes are ordered reverse-chronologically.
  - Added icon next to language-switching functionality
  - Languages: English, Arabic, Farsi, French, Hindi, Spanish, Swahili, and Urdu
 
-See a `more detailed list <https://github.com/learningequality/kolibri/issues?q=milestone%3A0.8.0+label%3Achangelog>`_ of changes on Github.
+See a `more detailed list <https://github.com/learningequality/kolibri/issues?q=milestone%3A0.9.0+label%3Achangelog>`_ of changes on Github.
 
 
 0.8.0

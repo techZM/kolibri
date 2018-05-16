@@ -45,22 +45,18 @@
       />
 
       <fieldset class="coach-selector" v-if="coachIsSelected">
-        <label>
-          <k-radio-button
-            :label="$tr('classCoachLabel')"
-            :radiovalue="true"
-            v-model="classCoachIsSelected"
-          />
-          {{ $tr('classCoachDescription') }}
-        </label>
-        <label>
-          <k-radio-button
-            :label="$tr('facilityCoachLabel')"
-            :radiovalue="false"
-            v-model="classCoachIsSelected"
-          />
-          {{ $tr('facilityCoachDescription') }}
-        </label>
+        <k-radio-button
+          :label="$tr('classCoachLabel')"
+          :description="$tr('classCoachDescription')"
+          :value="true"
+          v-model="classCoachIsSelected"
+        />
+        <k-radio-button
+          :label="$tr('facilityCoachLabel')"
+          :description="$tr('facilityCoachDescription')"
+          :value="false"
+          v-model="classCoachIsSelected"
+        />
       </fieldset>
 
       <div class="core-modal-buttons">
@@ -232,7 +228,7 @@
           }
           this.updateUser(this.id, {
             username: this.newUsername,
-            name: this.newName,
+            full_name: this.newName,
             role: roleUpdate,
           });
           if (

@@ -12,7 +12,13 @@ files:
       locale_with_underscore:
         ar: ar
         fa: fa
+        mr: mr
         my: my
+        ny: nyn
+        ta: ta
+        te: te
+        yo: yo
+        zu: zu
 
   - source: '/en/LC_MESSAGES/*.po'
     translation: '/%locale_with_underscore%/LC_MESSAGES/%original_file_name%'
@@ -20,4 +26,10 @@ files:
       locale_with_underscore:
         ar: ar
         fa: fa
+        mr: mr
         my: my
+        ny: nyn
+        ta: ta
+        te: te
+        yo: yo
+        zu: zu

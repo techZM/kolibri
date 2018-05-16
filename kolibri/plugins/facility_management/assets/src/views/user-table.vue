@@ -1,14 +1,7 @@
 <template>
 
   <div>
-    <core-table class="user-table">
-      <caption v-if="title" class="title">
-        {{ title }}
-      </caption>
-      <caption v-else class="visuallyhidden">
-        {{ $tr('users') }}
-      </caption>
-
+    <core-table>
 
       <thead slot="thead">
         <tr>
@@ -91,6 +84,7 @@
   import kCheckbox from 'kolibri.coreVue.components.kCheckbox';
   import userRole from './user-role';
   import UiIcon from 'keen-ui/src/UiIcon';
+  import difference from 'lodash/difference';
 
   export default {
     name: 'userTable',
@@ -131,7 +125,7 @@
     },
     computed: {
       allAreSelected() {
-        return this.users.every(user => this.value.includes(user.id)) && Boolean(this.users.length);
+        return Boolean(this.users.length) && this.users.every(user => this.value.includes(user.id));
       },
     },
     methods: {
@@ -139,7 +133,11 @@
         return this.value.includes(id);
       },
       selectAll(checked) {
-        return this.$emit('input', checked ? this.users.map(user => user.id) : []);
+        const currentUsers = this.users.map(user => user.id);
+        if (checked) {
+          return this.$emit('input', [...this.value, ...currentUsers]);
+        }
+        return this.$emit('input', difference(this.value, currentUsers));
       },
       selectUser(id, checked) {
         const selected = Array.from(this.value);
@@ -155,7 +153,6 @@
       actions: {},
     },
     $trs: {
-      users: 'Users',
       coachTableTitle: 'Coaches',
       learnerTableTitle: 'Learners',
       fullName: 'Full name',
@@ -173,17 +170,8 @@
 
 <style lang="stylus" scoped>
 
-  .title, .empty-message
-    margin-bottom: 16px
-
-  .title
-    font-size: 24px
-    text-align: left
-    font-weight: bold
-
   .empty-message
-    text-align: center
-    font-weight: bold
+    margin-bottom: 16px
 
   .user-action-button
     text-align: right

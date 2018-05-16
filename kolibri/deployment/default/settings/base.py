@@ -162,7 +162,7 @@ CENTRAL_CONTENT_DOWNLOAD_BASE_URL = os.environ.get('CENTRAL_CONTENT_DOWNLOAD_BAS
 with open(os.path.join(KOLIBRI_MODULE_PATH, "locale", "supported_languages.json")) as f:
     LANGUAGES = i18n.parse_supported_languages(json.load(f))
 
-# Haitian Creole is not supported out-of-the-box by Django
+# Some languages are not supported out-of-the-box by Django
 # Here, we use the language code in Intl.js
 EXTRA_LANG_INFO = {
     'fr-ht': {
@@ -170,6 +170,24 @@ EXTRA_LANG_INFO = {
         'code': 'fr-ht',
         'name': 'Haitian Creole',
         'name_local': 'Kreyòl ayisyen',
+    },
+    'nyn': {
+        'bidi': False,
+        'code': 'nyn',
+        'name': 'Chichewa, Chewa, Nyanja',
+        'name_local': 'chinyanja',
+    },
+    'yo': {
+        'bidi': False,
+        'code': 'yo',
+        'name': 'Yoruba',
+        'name_local': 'Yorùbá',
+    },
+    'zu': {
+        'bidi': False,
+        'code': 'zu',
+        'name': 'Zulu',
+        'name_local': 'isiZulu',
     },
 }
 locale.LANG_INFO.update(EXTRA_LANG_INFO)

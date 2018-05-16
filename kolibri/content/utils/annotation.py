@@ -3,14 +3,22 @@ import logging as logger
 import os
 
 from django.conf import settings
-from kolibri.content.apps import KolibriContentConfig
-from kolibri.content.models import ChannelMetadata, ContentNode, File, LocalFile
 from le_utils.constants import content_kinds
-from sqlalchemy import and_, exists, func, select
+from sqlalchemy import and_
+from sqlalchemy import exists
+from sqlalchemy import func
+from sqlalchemy import select
 
 from .channels import get_channel_ids_for_content_database_dir
-from .paths import get_content_file_name, get_content_storage_file_path
+from .paths import get_content_database_file_path
+from .paths import get_content_file_name
+from .paths import get_content_storage_file_path
 from .sqlalchemybridge import Bridge
+from kolibri.content.apps import KolibriContentConfig
+from kolibri.content.models import ChannelMetadata
+from kolibri.content.models import ContentNode
+from kolibri.content.models import File
+from kolibri.content.models import LocalFile
 
 logging = logger.getLogger(__name__)
 
@@ -18,18 +26,55 @@ CONTENT_APP_NAME = KolibriContentConfig.label
 
 CHUNKSIZE = 10000
 
+
 def update_channel_metadata():
     """
     If we are potentially moving from a version of Kolibri that did not import its content data,
     scan through the settings.CONTENT_DATABASE_DIR folder for all channel content databases,
     and pull the data from each database if we have not already imported it.
+    Additionally, fix any potential issues that might be in the current content database from bugs
+    in a previous version.
     """
     from .channel_import import import_channel_from_local_db
     channel_ids = get_channel_ids_for_content_database_dir(settings.CONTENT_DATABASE_DIR)
     for channel_id in channel_ids:
         if not ChannelMetadata.objects.filter(id=channel_id).exists():
             import_channel_from_local_db(channel_id)
-            set_availability(channel_id)
+    fix_multiple_trees_with_id_one()
+
+
+def fix_multiple_trees_with_id_one():
+    # Do a check for improperly imported ContentNode trees
+    # These trees have been naively imported, and so there are multiple trees
+    # with tree_ids set to 1. Just check the root nodes to reduce the query size.
+    tree_id_one_channel_ids = ContentNode.objects.filter(parent=None, tree_id=1).values_list('channel_id', flat=True)
+    if len(tree_id_one_channel_ids) > 1:
+        logging.warning("Improperly imported channels discovered")
+        # There is more than one channel with a tree_id of 1
+        # Find which channel has the most content nodes, and then delete and reimport the rest.
+        channel_sizes = {}
+        for channel_id in tree_id_one_channel_ids:
+            channel_sizes[channel_id] = ContentNode.objects.filter(channel_id=channel_id).count()
+        # Get sorted list of ids by increasing number of nodes
+        sorted_channel_ids = sorted(channel_sizes, key=channel_sizes.get)
+        # Loop through all but the largest channel, delete and reimport
+        count = 0
+        from .channel_import import import_channel_from_local_db
+        for channel_id in sorted_channel_ids[:-1]:
+            # Double check that we have a content db to import from before deleting any metadata
+            if os.path.exists(get_content_database_file_path(channel_id)):
+                logging.warning("Deleting and reimporting channel metadata for {channel_id}".format(channel_id=channel_id))
+                ChannelMetadata.objects.get(id=channel_id).delete_content_tree_and_files()
+                import_channel_from_local_db(channel_id)
+                logging.info("Successfully reimported channel metadata for {channel_id}".format(channel_id=channel_id))
+                count += 1
+            else:
+                logging.warning("Attempted to reimport channel metadata for channel {channel_id} but no content database found".format(channel_id=channel_id))
+        if count:
+            logging.info("Successfully reimported channel metadata for {count} channels".format(count=count))
+        failed_count = len(sorted_channel_ids) - 1 - count
+        if failed_count:
+            logging.warning("Failed to reimport channel metadata for {count} channels".format(count=failed_count))
 
 
 def set_leaf_node_availability_from_local_file_availability():
@@ -92,16 +137,17 @@ def set_local_file_availability_from_disk(checksums=None):
 
     if checksums is None:
         logging.info('Setting availability of LocalFile objects based on disk availability')
-        files = bridge.session.query(LocalFileClass).all()
+        files = bridge.session.query(LocalFileClass.id, LocalFileClass.available, LocalFileClass.extension).all()
     elif type(checksums) == list:
         logging.info('Setting availability of {number} LocalFile objects based on disk availability'.format(number=len(checksums)))
-        files = bridge.session.query(LocalFileClass).filter(LocalFileClass.id.in_(checksums)).all()
+        files = bridge.session.query(LocalFileClass.id, LocalFileClass.available, LocalFileClass.extension).filter(LocalFileClass.id.in_(checksums)).all()
     else:
         logging.info('Setting availability of LocalFile object with checksum {checksum} based on disk availability'.format(checksum=checksums))
         files = [bridge.session.query(LocalFileClass).get(checksums)]
 
     checksums_to_update = [
-        file.id for file in files if os.path.exists(get_content_storage_file_path(get_content_file_name(file)))
+        # Only update if the file exists, *and* the localfile is set as unavailable.
+        file.id for file in files if os.path.exists(get_content_storage_file_path(get_content_file_name(file))) and not file.available
     ]
 
     bridge.end()
