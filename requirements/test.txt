@@ -7,4 +7,4 @@ mixer==6.0.1
 pytest==3.7.4
 pytest-cov==2.5.1
 pytest-django==3.4.2
-pytest-pythonpath==0.7.2
+pytest-pythonpath==0.7.3
