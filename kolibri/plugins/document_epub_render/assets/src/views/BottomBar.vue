@@ -1,8 +1,10 @@
 <template>
 
-  <div class="bottom-bar">
+  <div class="bottom-bar" :style="{ backgroundColor: $coreGrey200 }">
     <div class="bottom-bar-heading">
-      <h3 v-if="heading">{{ heading }}</h3>
+      <h3 v-if="heading">
+        {{ heading }}
+      </h3>
     </div>
     <transition mode="in-out">
       <div v-if="locationsAreReady">
@@ -47,6 +49,7 @@
 
 <script>
 
+  import themeMixin from 'kolibri.coreVue.mixins.themeMixin';
   import KLinearLoader from 'kolibri.coreVue.components.KLinearLoader';
 
   export default {
@@ -59,6 +62,7 @@
     components: {
       KLinearLoader,
     },
+    mixins: [themeMixin],
     props: {
       heading: {
         type: String,
@@ -89,7 +93,6 @@
 
 <style lang="scss" scoped>
 
-  @import '~kolibri.styles.definitions';
   @import './EpubStyles';
 
   .bottom-bar {
@@ -97,7 +100,6 @@
     padding: 8px 8px 0;
     overflow: hidden;
     text-align: center;
-    background-color: $core-grey-200;
     box-shadow: $epub-box-shadow;
   }
 

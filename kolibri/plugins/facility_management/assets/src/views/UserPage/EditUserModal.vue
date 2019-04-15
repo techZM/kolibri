@@ -231,6 +231,8 @@
         if (devicePageUrl) {
           return `${devicePageUrl()}#/permissions/${this.id}`;
         }
+
+        return '';
       },
       newType() {
         // never got the chance to even change it
@@ -304,8 +306,6 @@
 
 
 <style lang="scss" scoped>
-
-  @import '~kolibri.styles.definitions';
 
   .coach-selector {
     padding: 0;

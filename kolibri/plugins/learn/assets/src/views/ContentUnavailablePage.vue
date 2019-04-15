@@ -12,6 +12,7 @@
 
 <script>
 
+  import { mapGetters } from 'vuex';
   import KExternalLink from 'kolibri.coreVue.components.KExternalLink';
   import urls from 'kolibri.urls';
 
@@ -26,11 +27,14 @@
       KExternalLink,
     },
     computed: {
+      ...mapGetters(['canManageContent']),
       deviceContentUrl() {
         const deviceContentUrl = urls['kolibri:devicemanagementplugin:device_management'];
-        if (deviceContentUrl) {
+        if (deviceContentUrl && this.canManageContent) {
           return `${deviceContentUrl()}#/content`;
         }
+
+        return '';
       },
     },
     $trs: {

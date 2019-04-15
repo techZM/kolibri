@@ -2,11 +2,11 @@
 
   <UiToolbar
     class="progress-toolbar"
-    type="colored"
+    type="clear"
     textColor="white"
+    :removeNavIcon="!displayNavIcon"
   >
     <UiIconButton
-      v-show="currentStep > 1"
       slot="icon"
       type="secondary"
       color="white"
@@ -24,8 +24,8 @@
 
 <script>
 
-  import UiToolbar from 'keen-ui/src/UiToolbar';
-  import UiIconButton from 'keen-ui/src/UiIconButton';
+  import UiToolbar from 'kolibri.coreVue.components.UiToolbar';
+  import UiIconButton from 'kolibri.coreVue.components.UiIconButton';
 
   export default {
     name: 'ProgressToolbar',
@@ -46,14 +46,17 @@
         required: true,
       },
     },
+    computed: {
+      displayNavIcon() {
+        return this.currentStep > 1;
+      },
+    },
   };
 
 </script>
 
 
 <style lang="scss" scoped>
-
-  @import '~kolibri.styles.definitions';
 
   .progress-toolbar {
     fill: white;

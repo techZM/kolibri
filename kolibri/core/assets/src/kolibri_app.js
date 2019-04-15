@@ -1,9 +1,13 @@
 import forEach from 'lodash/forEach';
+import isPlainObject from 'lodash/isPlainObject';
 import router from 'kolibri.coreVue.router';
+import logger from 'kolibri.lib.logging';
 import Vue from 'kolibri.lib.vue';
 import store from 'kolibri.coreVue.vuex.store';
 import heartbeat from 'kolibri.heartbeat';
 import KolibriModule from 'kolibri_module';
+
+export const logging = logger.getLogger(__filename);
 
 /*
  * A class for single page apps that control routing and vuex state.
@@ -17,10 +21,6 @@ export default class KolibriApp extends KolibriModule {
    */
   get routes() {
     return [];
-  }
-
-  get routerInstance() {
-    return router.getInstance();
   }
 
   /*
@@ -42,9 +42,7 @@ export default class KolibriApp extends KolibriModule {
    *                           Each function should return a promise that resolves when the state
    *                           has been set. These will be invoked after the current session has
    *                           been set in the vuex store, in order to allow these actions to
-   *                           reference getters that return data set by the getCurrentSession
-   *                           action. As this has always been bootstrapped into the base template
-   *                           this should not cause any real slow down in page loading.
+   *                           reference getters that return data set by the heartbeat.
    */
   get stateSetters() {
     return [];
@@ -74,12 +72,78 @@ export default class KolibriApp extends KolibriModule {
       store.registerModule(name, module);
     });
 
-    return this.store.dispatch('getCurrentSession').then(() => {
+    if (process.env.NODE_ENV !== 'production') {
+      /* eslint-disable no-inner-declarations */
+      // Register any schemas we have defined for vuex state
+      function registerSchema(schema, moduleName, subPaths = []) {
+        forEach(schema, (subSchema, propertyName) => {
+          // Must be a plain object to be a valid schema spec
+          // And have at least a default key, and one of type or validator
+          logging.debug(subSchema);
+          if (isPlainObject(subSchema)) {
+            if (
+              typeof subSchema.default !== 'undefined' &&
+              (subSchema.type || (subSchema.validator && subSchema.validator instanceof Function))
+            ) {
+              function getter(state) {
+                if (moduleName) {
+                  state = state[moduleName];
+                }
+                subPaths.forEach(path => {
+                  state = state[path];
+                });
+                return state[propertyName];
+              }
+              function callback(newValue) {
+                let fail = false;
+                if (subSchema.type) {
+                  if (subSchema.type === Object) {
+                    if (!isPlainObject(newValue)) {
+                      fail = true;
+                    }
+                  } else {
+                    fail = !(newValue instanceof subSchema.type);
+                  }
+                }
+                if (subSchema.validator) {
+                  if (!subSchema.validator(newValue)) {
+                    fail = true;
+                  }
+                }
+                if (fail) {
+                  logging.error(
+                    `Validation failed for property: ${[...subPaths, propertyName]} in module ${
+                      moduleName ? moduleName : 'root'
+                    }`
+                  );
+                }
+              }
+              logging.debug(getter, callback);
+              store.watch(getter, callback);
+            } else {
+              // Otherwise assume it is just a nested object structure
+              registerSchema(subSchema, moduleName, [...subPaths, propertyName]);
+            }
+          }
+        });
+      }
+      if (this.pluginModule.state.schema) {
+        registerSchema(this.pluginModule.state.schema);
+      }
+      forEach(this.pluginModule.modules, (module, name) => {
+        if (module.schema) {
+          registerSchema(module.schema, name);
+        }
+      });
+      /* eslint-enable */
+    }
+
+    return heartbeat.startPolling().then(() => {
+      this.store.dispatch('getNotifications');
       return Promise.all([
         // Invoke each of the state setters before initializing the app.
         ...this.stateSetters.map(setter => setter(this.store)),
       ]).then(() => {
-        heartbeat.start();
         this.rootvue = new Vue(
           Object.assign(
             {

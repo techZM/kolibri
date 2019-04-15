@@ -27,7 +27,7 @@
             <th></th>
           </tr>
         </thead>
-        <tbody slot="tbody">
+        <transition-group slot="tbody" tag="tbody" name="list">
           <ContentNodeRow
             v-for="node in showableAnnotatedChildNodes"
             :key="node.id"
@@ -39,7 +39,7 @@
             @clicktopic="updateCurrentTopicNode(node)"
             @changeselection="toggleSelection(node)"
           />
-        </tbody>
+        </transition-group>
       </CoreTable>
     </div>
 
@@ -61,7 +61,6 @@
   import KCheckbox from 'kolibri.coreVue.components.KCheckbox';
   import KBreadcrumbs from 'kolibri.coreVue.components.KBreadcrumbs';
   import { ContentNodeKinds } from 'kolibri.coreVue.vuex.constants';
-  import last from 'lodash/last';
   import every from 'lodash/every';
   import omit from 'lodash/omit';
   import { navigateToTopicUrl } from '../../routes/wizardTransitionRoutes';
@@ -157,11 +156,6 @@
           !this.inExportMode
         );
       },
-      breadcrumbItems() {
-        const items = [...this.breadcrumbs];
-        delete last(items).link;
-        return items;
-      },
     },
     methods: {
       ...mapActions('manageContent/wizard', ['addNodeForTransfer', 'removeNodeForTransfer']),
@@ -221,6 +215,8 @@
 <style lang="scss" scoped>
 
   .select-all {
+    // Overrides overflow-x: hidden rule for CoreTable th's
+    overflow-x: visible;
     white-space: nowrap;
     .k-checkbox-container {
       margin-right: -70px;

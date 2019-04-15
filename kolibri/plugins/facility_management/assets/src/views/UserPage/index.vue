@@ -10,6 +10,7 @@
         <KButton
           :text="$tr('newUserButtonLabel')"
           :primary="true"
+          class="move-down"
           @click="displayModal(Modals.CREATE_USER)"
         />
       </KGridItem>
@@ -32,7 +33,7 @@
     </KGrid>
 
     <UserTable
-      class="user-roster"
+      class="user-roster move-down"
       :users="visibleUsers"
       :emptyMessage="emptyMessage"
     >
@@ -61,14 +62,12 @@
     <ResetUserPasswordModal
       v-if="modalShown===Modals.RESET_USER_PASSWORD"
       :id="selectedUser.id"
-      :name="selectedUser.full_name"
       :username="selectedUser.username"
     />
 
     <DeleteUserModal
       v-if="modalShown===Modals.DELETE_USER"
       :id="selectedUser.id"
-      :name="selectedUser.full_name"
       :username="selectedUser.username"
     />
 
@@ -164,6 +163,9 @@
         if (user.kind === UserKinds.ASSIGNABLE_COACH) {
           return filterKind === UserKinds.COACH;
         }
+        if (filterKind === UserKinds.ADMIN) {
+          return user.kind === UserKinds.ADMIN || user.kind === UserKinds.SUPERUSER;
+        }
         return filterKind === user.kind;
       },
       manageUserOptions(userId) {
@@ -216,6 +218,11 @@
 
 
 <style lang="scss" scoped>
+
+  .move-down {
+    position: relative;
+    margin-top: 24px;
+  }
 
   .type-filter {
     margin-bottom: 0;

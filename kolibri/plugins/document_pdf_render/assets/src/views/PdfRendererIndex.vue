@@ -3,6 +3,7 @@
   <CoreFullscreen
     ref="pdfRenderer"
     class="pdf-renderer"
+    :style="{ backgroundColor: $coreTextDefault }"
     @changeFullscreen="isInFullscreen = $event"
   >
     <KLinearLoader
@@ -78,19 +79,21 @@
   import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
   // polyfill necessary for recycle list
   import 'intersection-observer';
+  import themeMixin from 'kolibri.coreVue.mixins.themeMixin';
   import KLinearLoader from 'kolibri.coreVue.components.KLinearLoader';
   import responsiveElement from 'kolibri.coreVue.mixins.responsiveElement';
   import responsiveWindow from 'kolibri.coreVue.mixins.responsiveWindow';
   import contentRendererMixin from 'kolibri.coreVue.mixins.contentRendererMixin';
   import CoreFullscreen from 'kolibri.coreVue.components.CoreFullscreen';
+  import urls from 'kolibri.urls';
 
-  import UiIconButton from 'keen-ui/src/UiIconButton';
+  import UiIconButton from 'kolibri.coreVue.components.UiIconButton';
 
   import PdfPage from './PdfPage';
   // Source from which PDFJS loads its service worker, this is based on the __publicPath
   // global that is defined in the Kolibri webpack pipeline, and the additional entry in the PDF
   // renderer's own webpack config
-  PDFJSLib.PDFJS.workerSrc = `${__publicPath}pdfJSWorker-${__version}.js`;
+  PDFJSLib.PDFJS.workerSrc = urls.static(`${__kolibriModuleName}/pdfJSWorker-${__version}.js`);
 
   // How often should we respond to changes in scrolling to render new pages?
   const renderDebounceTime = 300;
@@ -106,7 +109,7 @@
       RecycleList,
       CoreFullscreen,
     },
-    mixins: [responsiveWindow, responsiveElement, contentRendererMixin],
+    mixins: [responsiveWindow, responsiveElement, contentRendererMixin, themeMixin],
     data: () => ({
       progress: null,
       scale: null,
@@ -122,17 +125,11 @@
     }),
     computed: {
       ...mapGetters(['sessionTimeSpent']),
-      pdfURL() {
-        return this.defaultFile.storage_url;
-      },
       targetTime() {
         return this.totalPages * 30;
       },
       documentLoading() {
         return this.progress < 1;
-      },
-      pdfPositionKey() {
-        return `pdfPosition-${this.files[0].id}`;
       },
       itemHeight() {
         return this.firstPageHeight * this.scale + MARGIN;
@@ -339,12 +336,9 @@
 
 <style lang="scss" scoped>
 
-  @import '~kolibri.styles.definitions';
-
   .pdf-renderer {
     position: relative;
     height: 500px;
-    background-color: $core-text-default;
   }
 
   .controls {

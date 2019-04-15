@@ -21,17 +21,6 @@ export const Modals = {
   DELETE_USER: 'DELETE_USER',
 };
 
-export const defaultFacilityConfig = {
-  learnerCanEditUsername: true,
-  learnerCanEditName: true,
-  learnerCanEditPassword: true,
-  learnerCanSignUp: true,
-  learnerCanDeleteAccount: true,
-  learnerCanLoginWithNoPassword: false,
-  showDownloadButtonInLearn: false,
-  allowGuestAccess: true,
-};
-
 export const notificationTypes = {
   PAGELOAD_FAILURE: 'PAGELOAD_FAILURE',
   SAVE_FAILURE: 'SAVE_FAILURE',
@@ -45,4 +34,25 @@ export const pageNameToModuleMap = {
   [PageNames.CLASS_ENROLL_LEARNER]: 'classAssignMembers',
   [PageNames.USER_MGMT_PAGE]: 'userManagement',
   [PageNames.FACILITY_CONFIG_PAGE]: 'facilityConfig',
+};
+
+export const TaskTypes = {
+  EXPORTSESSIONLOGCSV: 'EXPORTSESSIONLOGCSV',
+  EXPORTSUMMARYLOGCSV: 'EXPORTSUMMARYLOGCSV',
+};
+
+export const TaskStatuses = {
+  IN_PROGRESS: 'INPROGRESS',
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED',
+  PENDING: 'PENDING',
+  RUNNING: 'RUNNING',
+  QUEUED: 'QUEUED',
+  SCHEDULED: 'SCHEDULED',
+};
+
+export const CSVGenerationStatuses = {
+  NO_LOGS_CREATED: 'NOLOGSCREATED',
+  GENERATING: 'GENERATING',
+  AVAILABLE: 'AVAILABLE',
 };

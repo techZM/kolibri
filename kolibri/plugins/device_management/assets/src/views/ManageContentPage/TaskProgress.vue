@@ -7,13 +7,13 @@
           v-if="taskHasFailed"
           category="alert"
           name="error"
-          class="error"
+          :style="{ fill: $coreTextError }"
         />
         <mat-svg
           v-else-if="taskHasCompleted"
           category="action"
           name="check_circle"
-          class="complete"
+          :style="{ fill: $coreStatusCorrect }"
         />
         <KCircularLoader
           v-else
@@ -56,6 +56,7 @@
 <script>
 
   import { mapActions } from 'vuex';
+  import themeMixin from 'kolibri.coreVue.mixins.themeMixin';
   import KLinearLoader from 'kolibri.coreVue.components.KLinearLoader';
   import KCircularLoader from 'kolibri.coreVue.components.KCircularLoader';
   import KButton from 'kolibri.coreVue.components.KButton';
@@ -73,6 +74,7 @@
       KCircularLoader,
       KButton,
     },
+    mixins: [themeMixin],
     props: {
       type: RequiredString,
       status: RequiredString,
@@ -80,7 +82,6 @@
         type: Number,
         required: true,
       },
-      id: RequiredString,
       cancellable: {
         type: Boolean,
         required: true,
@@ -106,7 +107,7 @@
           return this.$tr('downloadingChannelContents');
         }
 
-        if (this.status === TaskStatuses.RUNNING) {
+        if (this.status === this.TaskStatuses.RUNNING) {
           switch (this.type) {
             case TaskTypes.REMOTE_IMPORT:
             case TaskTypes.LOCAL_IMPORT:
@@ -133,15 +134,19 @@
         if (this.taskIsPreparing) {
           return this.$tr('preparingTask');
         }
+
+        return '';
       },
       taskHasFailed() {
-        return this.status === TaskStatuses.FAILED;
+        return this.status === this.TaskStatuses.FAILED;
       },
       taskHasCompleted() {
-        return this.status === TaskStatuses.COMPLETED;
+        return this.status === this.TaskStatuses.COMPLETED;
       },
       taskIsPreparing() {
-        return this.status === TaskStatuses.QUEUED || this.status === TaskStatuses.SCHEDULED;
+        return (
+          this.status === this.TaskStatuses.QUEUED || this.status === this.TaskStatuses.SCHEDULED
+        );
       },
       formattedPercentage() {
         return this.percentage * 100;
@@ -182,19 +187,11 @@
 
 <style lang="scss" scoped>
 
-  @import '~kolibri.styles.definitions';
-
   .progress-icon {
     width: 5%;
     text-align: center;
     .inprogress {
       display: inline-block;
-    }
-    .complete {
-      fill: $core-status-correct;
-    }
-    .error {
-      fill: $core-text-error;
     }
   }
 
@@ -203,7 +200,7 @@
     width: 100%;
     height: 5em;
     padding-right: 1em;
-    padding-left: 1em;
+    margin-left: -6px;
     vertical-align: middle;
   }
 
@@ -213,13 +210,13 @@
 
   .progress-bar {
     width: 50%;
-    padding-bottom: 10px;
+    padding-bottom: 8px;
+    padding-left: 8px;
     font-size: 0.75em;
   }
 
   .progress-messages {
-    padding-right: 1em;
-    padding-left: 1em;
+    padding-left: 16px;
   }
 
   .percentage {

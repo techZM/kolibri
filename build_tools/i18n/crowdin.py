@@ -81,11 +81,15 @@ ADD_BRANCH_URL = CROWDIN_API_URL.format(
     cmd="add-directory",
     params="&name={branch}&is_branch=1&json",
 )
+# pre-translate all strings matches, and auto-approve only those with exact ID matches
 PRETRANSLATE_URL = CROWDIN_API_URL.format(
     proj=CROWDIN_PROJECT,
     key=CROWDIN_API_KEY,
     cmd="pre-translate",
-    params="&method=tm&approve_translated=1&auto_approve_option=1&json&&apply_untranslated_strings_only=1&perfect_match=1",
+    # perfect_match=0 - apply TM to all identical strings, regardless of ID
+    # apply_untranslated_strings_only=1 - don't apply TM to strings that already have translations
+    # approve_translated=1 - auto-approve
+    params="&method=tm&approve_translated=1&auto_approve_option={approve_option}&json&apply_untranslated_strings_only=1&perfect_match=0",
 )
 UPLOAD_TRANSLATION_URL = CROWDIN_API_URL.format(
     proj=CROWDIN_PROJECT,
@@ -128,9 +132,9 @@ def _format_json_files():
     re-print all json files to ensure consistent diffs with ordered keys
     """
     locale_paths = []
-    for lang_info in utils.supported_languages(include_in_context=True):
-        locale_paths.append(utils.local_locale_path(lang_info))
-        locale_paths.append(utils.local_perseus_locale_path(lang_info))
+    for lang_object in utils.supported_languages(include_in_context=True):
+        locale_paths.append(utils.local_locale_path(lang_object))
+        locale_paths.append(utils.local_perseus_locale_path(lang_object))
     for locale_path in locale_paths:
         for file_name in os.listdir(locale_path):
             if not file_name.endswith(".json"):
@@ -139,6 +143,10 @@ def _format_json_files():
             with io.open(file_path, mode="r", encoding="utf-8") as f:
                 data = json.load(f)
             utils.json_dump_formatted(data, file_path)
+
+
+def _is_string_file(file_name):
+    return file_name.endswith(".json") or file_name.endswith(".po")
 
 
 """
@@ -166,11 +174,10 @@ Pre-translate command
 """
 
 
-def command_pretranslate(branch):
+def command_pretranslate(branch, approve_all=False):
     """
     Applies pre-translation to the given branch on Crowdin
     """
-    logging.info("Crowdin: pre-translating '{}'...".format(branch))
     params = []
     files = [
         "{}/{}".format(branch, f)
@@ -179,9 +186,21 @@ def command_pretranslate(branch):
     params.extend([("files[]", file) for file in files])
     codes = [lang[utils.KEY_CROWDIN_CODE] for lang in utils.supported_languages()]
     params.extend([("languages[]", code) for code in codes])
-    r = requests.post(PRETRANSLATE_URL, params=params)
+
+    msg = (
+        "Crowdin: pre-translating and pre-approving untranslated matches in '{}'..."
+        if approve_all
+        else "Crowdin: pre-translating untranslated matches in '{}'..."
+    )
+    msg += "\n\tNote that this operation can take a long time and may time out."
+    msg += "\n\tYou should see the results on Crowdin eventually..."
+    logging.info(msg.format(branch))
+
+    r = requests.post(
+        PRETRANSLATE_URL.format(approve_option=0 if approve_all else 1), params=params
+    )
     r.raise_for_status()
-    logging.info("Crowdin: pre-translate succeeded!")
+    logging.info("Crowdin: succeeded!")
 
 
 """
@@ -198,32 +217,15 @@ def _translation_upload_ref(file_name, lang_object):
     return ("files[{0}]".format(file_name), file_pointer)
 
 
-def command_upload_translation(branch, lang_code, file_name):
-    # make sure it's not a source
-    if lang_code == "en":
-        logging.error("'en' is a source, not a translation")
-        sys.exit(1)
+def _upload_translation(branch, lang_object):
 
-    # check branch
     if _no_crowdin_branch(branch, _get_crowdin_details()):
-        logging.error("Branch '{}' not found.".format(lang_code))
-        sys.exit(1)
-
-    # find language
-    try:
-        lang_object = next(
-            lang
-            for lang in utils.supported_languages()
-            if lang[utils.KEY_INTL_CODE] == lang_code
-        )
-    except StopIteration:
-        logging.error("Code '{}' not found in supported languages.".format(lang_code))
-        logging.error("Make sure to use an Intl code, not crowdin.")
+        logging.error("Branch '{}' not found.".format(branch))
         sys.exit(1)
 
     logging.info(
-        "Crowdin: uploading current translation for '{}' to '{}'...".format(
-            lang_code, branch
+        "Crowdin: uploading translation files for '{}' to '{}'...".format(
+            lang_object[utils.KEY_CROWDIN_CODE], branch
         )
     )
 
@@ -232,16 +234,14 @@ def command_upload_translation(branch, lang_code, file_name):
     )
 
     file_names = []
-    if file_name:
-        file_names.append(file_name)
-    else:
-        for name in os.listdir(utils.local_locale_path(lang_object)):
-            if name.endswith(".json"):
-                file_names.append(name)
+    for name in os.listdir(utils.local_locale_path(lang_object)):
+        if _is_string_file(name):
+            file_names.append(name)
+    for name in os.listdir(utils.local_perseus_locale_path(lang_object)):
+        if _is_string_file(name):
+            file_names.append(name)
 
     for chunk in _chunks(file_names):
-        logging.info("\t{}".format(", ".join(chunk)))
-
         references = [_translation_upload_ref(f, lang_object) for f in chunk]
         r = requests.post(url, files=references)
         r.raise_for_status()
@@ -249,6 +249,14 @@ def command_upload_translation(branch, lang_code, file_name):
             ref[1].close()
 
     logging.info("Crowdin: upload succeeded!")
+
+
+def command_upload_translations(branch):
+    supported_languages = utils.supported_languages(
+        include_in_context=False, include_english=False
+    )
+    for lang_object in supported_languages:
+        _upload_translation(branch, lang_object)
 
 
 """
@@ -273,18 +281,18 @@ def command_download(branch):
     _wipe_translations(utils.LOCALE_PATH)
     _wipe_translations(utils.PERSEUS_LOCALE_PATH)
 
-    for lang in utils.supported_languages(include_in_context=True):
-        code = lang[utils.KEY_CROWDIN_CODE]
+    for lang_object in utils.supported_languages(include_in_context=True):
+        code = lang_object[utils.KEY_CROWDIN_CODE]
         url = DOWNLOAD_URL.format(language=code, branch=branch)
         r = requests.get(url)
         r.raise_for_status()
         z = zipfile.ZipFile(io.BytesIO(r.content))
-        target = utils.local_locale_path(lang)
+        target = utils.local_locale_path(lang_object)
         logging.info("\tExtracting {} to {}".format(code, target))
         z.extractall(target)
 
         # hack for perseus
-        perseus_target = utils.local_perseus_locale_path(lang)
+        perseus_target = utils.local_perseus_locale_path(lang_object)
         if not os.path.exists(perseus_target):
             os.makedirs(perseus_target)
         shutil.move(
@@ -299,10 +307,6 @@ def command_download(branch):
 """
 Upload command
 """
-
-
-def _is_source(file_name):
-    return file_name.endswith(".json") or file_name.endswith(".po")
 
 
 def _source_upload_ref(file_name):
@@ -332,7 +336,7 @@ def _modify(url, file_names):
             ref[1].close()
 
 
-def command_upload(branch):
+def command_upload_sources(branch):
     """
     Uploads the English translation source files to the given branch on Crowdin
     """
@@ -346,7 +350,7 @@ def command_upload(branch):
     source_files = set(
         file_name
         for file_name in os.listdir(utils.SOURCE_PATH)
-        if _is_source(file_name)
+        if _is_string_file(file_name)
     )
 
     # hack for perseus
@@ -371,15 +375,28 @@ Stats command
 """
 
 STATS_TEMPLATE = """
-
+=================================================================
 Branch: {branch}
+=================================================================
+==  Summary  ====================================================
 
-New since last release:
-{totals_table}
+{summary_table}
 
-Untranslated:
-{branch_table}
+=================================================================
+==  Word counts  ================================================
 
+Total words: {words_total}
+
+{words_table}
+
+=================================================================
+==  String counts  ==============================================
+
+Total strings: {strings_total}
+
+{strings_table}
+
+=================================================================
 """
 
 
@@ -392,15 +409,16 @@ def command_stats(branch):
     def _is_branch_node(node):
         return node["node_type"] == "branch" and node["name"] == branch
 
-    total_strings = None
-    total_words = None
-
-    branch_table = []
+    strings_table = []
+    strings_total = 0
+    words_table = []
+    words_total = 0
 
     sorted_languages = sorted(
         utils.supported_languages(), key=lambda x: x[utils.KEY_ENG_NAME]
     )
     for lang in sorted_languages:
+
         logging.info("Retrieving stats for {}...".format(lang[utils.KEY_ENG_NAME]))
         r = requests.post(LANG_STATUS_URL.format(language=lang[utils.KEY_CROWDIN_CODE]))
         r.raise_for_status()
@@ -412,31 +430,53 @@ def command_stats(branch):
             logging.error("Branch '{}' not found on Crowdin".format(branch))
             sys.exit(1)
 
-        strs = branch_node["phrases"]
-        strs_fin = branch_node["approved"]
-        words = branch_node["words"]
-        words_fin = branch_node["words_approved"]
-
-        total_strings = strs
-        total_words = words
-
-        branch_table.append(
-            (lang[utils.KEY_ENG_NAME], strs - strs_fin, words - words_fin)
+        strings_table.append(
+            (
+                lang[utils.KEY_ENG_NAME],
+                branch_node["phrases"] - branch_node["translated"],
+                branch_node["translated"] - branch_node["approved"],
+            )
+        )
+        words_table.append(
+            (
+                lang[utils.KEY_ENG_NAME],
+                branch_node["words"] - branch_node["words_translated"],
+                branch_node["words_translated"] - branch_node["words_approved"],
+            )
         )
 
-    totals_table = [("Total strings", total_strings), ("Total words", total_words)]
-    avg_new_strings = round(sum([row[1] for row in branch_table]) / len(branch_table))
-    avg_new_words = round(sum([row[2] for row in branch_table]) / len(branch_table))
-    branch_table.insert(
-        0, ("** average, all languages **", avg_new_strings, avg_new_words)
-    )
-    branch_table_headers = ["Language", "Strings", "Words"]
+        strings_total = branch_node["phrases"]  # should be the same across languages
+        words_total = branch_node["words"]  # should be the same across languages
 
+    total_untranslated_strings = sum([row[1] for row in strings_table])
+    total_unapproved_strings = sum([row[2] for row in strings_table])
+    avg_untranslated_strings = round(total_untranslated_strings / len(strings_table))
+    avg_unapproved_strings = round(total_unapproved_strings / len(strings_table))
+    strings_table.append(
+        ("Average - all languages", avg_untranslated_strings, avg_unapproved_strings)
+    )
+    total_untranslated_words = sum([row[1] for row in words_table])
+    total_unapproved_words = sum([row[2] for row in words_table])
+    avg_untranslated_words = round(total_untranslated_words / len(words_table))
+    avg_unapproved_words = round(total_unapproved_words / len(words_table))
+    words_table.append(
+        ("Average - all languages", avg_untranslated_words, avg_unapproved_words)
+    )
+    summary_table_headers = ["", "Untranslated", "Needs approval"]
+    summary_table = [
+        ("Words", total_untranslated_words, total_unapproved_words),
+        ("Strings", total_untranslated_strings, total_unapproved_strings),
+    ]
+    strings_table_headers = ["Language", "Untranslated", "Needs approval"]
+    words_table_headers = ["Language", "Untranslated", "Needs approval"]
     logging.info(
         STATS_TEMPLATE.format(
             branch=branch,
-            totals_table=tabulate(totals_table),
-            branch_table=tabulate(branch_table, headers=branch_table_headers),
+            summary_table=tabulate(summary_table, headers=summary_table_headers),
+            words_total=words_total,
+            words_table=tabulate(words_table, headers=words_table_headers),
+            strings_total=strings_total,
+            strings_table=tabulate(strings_table, headers=strings_table_headers),
         )
     )
 
@@ -455,11 +495,18 @@ def main():
     )
     parser_download.add_argument("branch", help="Branch name", type=str)
     parser_upload = subparsers.add_parser(
-        "upload", help="Upload English sources to Crowdin"
+        "upload-sources", help="Upload English sources to Crowdin"
     )
     parser_upload.add_argument("branch", help="Branch name", type=str)
     parser_pretranslate = subparsers.add_parser(
-        "pre-translate", help="Apply translation memory on Crowdin"
+        "pretranslate", help="Apply translation memory on Crowdin"
+    )
+    parser_pretranslate.add_argument(
+        "--approve-all",
+        dest="approve",
+        action="store_true",
+        default=False,
+        help="Automatically approve all string matches on Crowdin",
     )
     parser_pretranslate.add_argument("branch", help="Branch name", type=str)
     parser_rebuild = subparsers.add_parser(
@@ -470,32 +517,24 @@ def main():
         "stats", help="Stats for the translations on Crowdin"
     )
     parser_stats.add_argument("branch", help="Branch name", type=str)
-    parser_upload_translation = subparsers.add_parser(
-        "upload-translation", help="Upload a translation from a backup file"
+    parser_upload_translations = subparsers.add_parser(
+        "upload-translations", help="Upload a translation from a backup file"
     )
-    parser_upload_translation.add_argument(
-        "--branch", help="Branch name", type=str, required=True
-    )
-    parser_upload_translation.add_argument(
-        "--language", help="Intl language code (not Crowdin)", type=str, required=True
-    )
-    parser_upload_translation.add_argument(
-        "--file", help="File name (not full path)", type=str
-    )
+    parser_upload_translations.add_argument("branch", help="Branch name", type=str)
     args = parser.parse_args()
 
     if args.command == "download":
         command_download(args.branch)
-    elif args.command == "upload":
-        command_upload(args.branch)
+    elif args.command == "upload-sources":
+        command_upload_sources(args.branch)
     elif args.command == "rebuild":
         command_rebuild(args.branch)
-    elif args.command == "pre-translate":
-        command_pretranslate(args.branch)
+    elif args.command == "pretranslate":
+        command_pretranslate(args.branch, args.approve)
     elif args.command == "stats":
         command_stats(args.branch)
-    elif args.command == "upload-translation":
-        command_upload_translation(args.branch, args.language, args.file)
+    elif args.command == "upload-translations":
+        command_upload_translations(args.branch)
     else:
         logging.warning("Unknown command\n")
         parser.print_help(sys.stderr)

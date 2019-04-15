@@ -3,7 +3,9 @@
   <div>
     <div v-if="isUserLoggedIn ">
       <h2>{{ $tr('allClassesHeader') }}</h2>
-
+      <p v-if="!classrooms.length">
+        {{ $tr('noClasses') }}
+      </p>
       <div class="classrooms">
         <ContentCard
           v-for="c in classrooms"
@@ -57,6 +59,7 @@
     $trs: {
       allClassesHeader: 'Classes',
       documentTitle: 'All classes',
+      noClasses: 'You are not enrolled in any classes',
     },
   };
 

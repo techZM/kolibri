@@ -13,7 +13,6 @@
           class="content-carousel-previous-control-button"
           :style="buttonTransforms"
           :disabled="isFirstSet"
-          :disableRipple="true"
           size="large"
         >
           <mat-svg name="arrow_back" category="navigation" />
@@ -53,7 +52,6 @@
           class="content-carousel-next-control-button"
           :style="buttonTransforms"
           :disabled="isLastSet"
-          :disableRipple="true"
           size="large"
         >
           <mat-svg name="arrow_forward" category="navigation" />
@@ -72,7 +70,7 @@
 
   import responsiveElement from 'kolibri.coreVue.mixins.responsiveElement';
   import { validateLinkObject } from 'kolibri.utils.validators';
-  import UiIconButton from 'keen-ui/src/UiIconButton';
+  import UiIconButton from 'kolibri.coreVue.components.UiIconButton';
   import ContentCard from './ContentCard';
 
   if (!ContentCard.mixins) {
@@ -123,10 +121,10 @@
         return this.isRtl ? 'right' : 'left';
       },
       contentSetSize() {
-        if (this.elementWidth > 2 * contentCardWidth) {
-          const numOfCards = Math.floor(this.elementWidth / contentCardWidth);
+        if (this.elementWidth > 2 * this.contentCardWidth) {
+          const numOfCards = Math.floor(this.elementWidth / this.contentCardWidth);
           const numOfGutters = numOfCards - 1;
-          const totalWidth = numOfCards * contentCardWidth + numOfGutters * gutterWidth;
+          const totalWidth = numOfCards * this.contentCardWidth + numOfGutters * this.gutterWidth;
           if (this.elementWidth >= totalWidth) {
             return numOfCards;
           }
@@ -144,26 +142,26 @@
         return this.contentSetEnd >= this.contents.length - 1;
       },
       contentSetStyles() {
-        const cards = this.contentSetSize * contentCardWidth + horizontalShadowOffset;
-        const gutters = (this.contentSetSize - 1) * gutterWidth;
+        const cards = this.contentSetSize * this.contentCardWidth + horizontalShadowOffset;
+        const gutters = (this.contentSetSize - 1) * this.gutterWidth;
         const maxCardShadowOffset = 14; // determined by css styles on cards
         const topShadowOffset = 10;
         return {
-          'min-width': `${contentCardWidth}px`,
+          'min-width': `${this.contentCardWidth}px`,
           'overflow-x': 'hidden',
           width: `${cards + gutters + maxCardShadowOffset}px`,
           // Bottom shadow is a little bit bigger, so add a few pixels more
-          height: `${contentCardWidth + maxCardShadowOffset + topShadowOffset + 3}px`,
+          height: `${this.contentCardWidth + maxCardShadowOffset + topShadowOffset + 3}px`,
           position: 'relative',
           'padding-top': `${topShadowOffset}px`,
         };
       },
       contentControlsContainerStyles() {
-        const cards = this.contentSetSize * contentCardWidth;
-        const gutters = (this.contentSetSize - 1) * gutterWidth;
+        const cards = this.contentSetSize * this.contentCardWidth;
+        const gutters = (this.contentSetSize - 1) * this.gutterWidth;
         return {
           width: `${cards + gutters}px`,
-          height: `${contentCardWidth}px`,
+          height: `${this.contentCardWidth}px`,
           overflow: 'visible',
           position: 'relative',
         };
@@ -213,8 +211,8 @@
     methods: {
       positionCalc(index) {
         const indexInSet = index - this.contentSetStart;
-        const gutterOffset = indexInSet * gutterWidth;
-        const cardOffset = indexInSet * contentCardWidth;
+        const gutterOffset = indexInSet * this.gutterWidth;
+        const cardOffset = indexInSet * this.contentCardWidth;
         return { [this.animationAttr]: `${cardOffset + gutterOffset + horizontalShadowOffset}px` };
       },
       setStartPosition(el) {
@@ -222,8 +220,8 @@
           // sets the initial spot from which cards will be sliding into place from
           // direction depends on `panBackwards`
           const originalPosition = parseInt(el.style[this.animationAttr], 10);
-          const cards = this.contentSetSize * contentCardWidth;
-          const gutters = this.contentSetSize * gutterWidth;
+          const cards = this.contentSetSize * this.contentCardWidth;
+          const gutters = this.contentSetSize * this.gutterWidth;
           const carouselContainerOffset = cards + gutters;
           const sign = this.panBackwards ? -1 : 1;
 
@@ -235,8 +233,8 @@
           // moves cards from their starting point by their offset
           // direction depends on `panBackwards`
           const originalPosition = parseInt(el.style[this.animationAttr], 10);
-          const cards = this.contentSetSize * contentCardWidth;
-          const gutters = this.contentSetSize * gutterWidth;
+          const cards = this.contentSetSize * this.contentCardWidth;
+          const gutters = this.contentSetSize * this.gutterWidth;
           const carouselContainerOffset = cards + gutters;
           const sign = this.panBackwards ? 1 : -1;
 
@@ -305,13 +303,13 @@
 
   .content-carousel-next-control-button,
   .content-carousel-previous-control-button {
+    @extend %dropshadow-1dp;
     // center align within hitbox
     position: absolute;
     top: 50%;
     left: 50%;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
     &:active {
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23); // material
+      @extend %dropshadow-8dp;
     }
   }
 

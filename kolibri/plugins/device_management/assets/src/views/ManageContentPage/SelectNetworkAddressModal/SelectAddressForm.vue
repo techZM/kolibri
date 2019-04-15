@@ -9,14 +9,6 @@
     @submit="handleSubmit"
     @cancel="$emit('cancel')"
   >
-    <KButton
-      v-show="!newAddressButtonDisabled"
-      class="new-address-button"
-      :text="$tr('newAddressButtonLabel')"
-      appearance="basic-link"
-      @click="$emit('click_add_address')"
-    />
-
     <UiAlert
       v-if="uiAlertProps"
       v-show="showUiAlerts"
@@ -31,6 +23,14 @@
         @click="refreshAddressList"
       />
     </UiAlert>
+
+    <KButton
+      v-show="!newAddressButtonDisabled"
+      class="new-address-button"
+      :text="$tr('newAddressButtonLabel')"
+      appearance="basic-link"
+      @click="$emit('click_add_address')"
+    />
 
     <template v-for="(a, idx) in addresses">
       <div :key="`div-${idx}`">
@@ -99,23 +99,26 @@
       submitDisabled() {
         return (
           this.selectedAddressId === '' ||
-          this.stage === Stages.FETCHING_ADDRESSES ||
-          this.stage === Stages.DELETING_ADDRESS
+          this.stage === this.Stages.FETCHING_ADDRESSES ||
+          this.stage === this.Stages.DELETING_ADDRESS
         );
       },
       newAddressButtonDisabled() {
-        return this.stage === Stages.FETCHING_ADDRESSES;
+        return this.stage === this.Stages.FETCHING_ADDRESSES;
       },
       requestsSucessful() {
         return (
-          this.stage === Stages.FETCHING_SUCCESSFUL || this.stage === Stages.DELETING_SUCCESSFUL
+          this.stage === this.Stages.FETCHING_SUCCESSFUL ||
+          this.stage === this.Stages.DELETING_SUCCESSFUL
         );
       },
       requestsFailed() {
-        return this.stage === Stages.FETCHING_FAILED || this.stage === Stages.DELETING_FAILED;
+        return (
+          this.stage === this.Stages.FETCHING_FAILED || this.stage === this.Stages.DELETING_FAILED
+        );
       },
       uiAlertProps() {
-        if (this.stage === Stages.FETCHING_ADDRESSES) {
+        if (this.stage === this.Stages.FETCHING_ADDRESSES) {
           return {
             text: this.$tr('fetchingAddressesText'),
             type: 'info',
@@ -127,13 +130,13 @@
             type: 'info',
           };
         }
-        if (this.stage === Stages.FETCHING_FAILED) {
+        if (this.stage === this.Stages.FETCHING_FAILED) {
           return {
             text: this.$tr('fetchingFailedText'),
             type: 'error',
           };
         }
-        if (this.stage === Stages.DELETING_FAILED) {
+        if (this.stage === this.Stages.DELETING_FAILED) {
           return {
             text: this.$tr('deletingFailedText'),
             type: 'error',
@@ -154,16 +157,16 @@
     },
     methods: {
       refreshAddressList() {
-        this.stage = Stages.FETCHING_ADDRESSES;
+        this.stage = this.Stages.FETCHING_ADDRESSES;
         this.addresses = [];
         return fetchAddresses(this.isImportingMore ? this.transferredChannel.id : '')
           .then(addresses => {
             this.addresses = addresses;
             this.resetSelectedAddress();
-            this.stage = Stages.FETCHING_SUCCESSFUL;
+            this.stage = this.Stages.FETCHING_SUCCESSFUL;
           })
           .catch(() => {
-            this.stage = Stages.FETCHING_FAILED;
+            this.stage = this.Stages.FETCHING_FAILED;
           });
       },
       resetSelectedAddress() {
@@ -175,16 +178,16 @@
         }
       },
       removeAddress(id) {
-        this.stage = Stages.DELETING_ADDRESS;
+        this.stage = this.Stages.DELETING_ADDRESS;
         return deleteAddress(id)
           .then(() => {
             this.addresses = this.addresses.filter(a => a.id !== id);
             this.resetSelectedAddress(this.addresses);
-            this.stage = Stages.DELETING_SUCCESSFUL;
+            this.stage = this.Stages.DELETING_SUCCESSFUL;
             this.$emit('removed_address');
           })
           .catch(() => {
-            this.stage = Stages.DELETING_FAILED;
+            this.stage = this.Stages.DELETING_FAILED;
           });
       },
       handleSubmit() {
@@ -200,8 +203,8 @@
       fetchingFailedText: 'There was a problem getting the available addresses',
       forgetAddressButtonLabel: 'Forget',
       header: 'Select network address',
-      newAddressButtonLabel: 'New address',
-      noAddressText: 'You have not entered any addresses',
+      newAddressButtonLabel: 'Add new address',
+      noAddressText: 'There are no addresses yet',
       refreshAddressesButtonLabel: 'Refresh addresses',
       submitButtonLabel: 'Continue',
     },

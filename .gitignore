@@ -68,6 +68,8 @@ docs/_build
 # node
 node_modules
 npm-debug.log
+yarn-error.log
+lerna-debug.log
 
 # Node coverage data
 coverage
@@ -119,10 +121,10 @@ build_tools/crowdin-cli.jar
 # Ignore pytest cache directory
 .pytest_cache/
 
-# Do not ignore this lib dir
-!eslint-plugin-kolibri/**/lib/
-
 # ignore source font files
 *.ttf
 *.ttc
 *.otf
+
+# SQLite file
+SQLITE_MAX_VARIABLE_NUMBER.cache

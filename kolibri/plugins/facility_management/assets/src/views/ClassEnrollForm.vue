@@ -81,11 +81,10 @@
   import differenceWith from 'lodash/differenceWith';
   import responsiveWindow from 'kolibri.coreVue.mixins.responsiveWindow';
   import KButton from 'kolibri.coreVue.components.KButton';
-  import UiIconButton from 'keen-ui/src/UiIconButton';
+  import UiIconButton from 'kolibri.coreVue.components.UiIconButton';
   import KFilterTextbox from 'kolibri.coreVue.components.KFilterTextbox';
   import { userMatchesFilter, filterAndSortUsers } from '../userSearchUtils';
   import UserTable from './UserTable';
-  import { Modals } from './../constants';
 
   export default {
     name: 'ClassEnrollForm',
@@ -139,9 +138,6 @@
       usersNotInClass() {
         return differenceWith(this.facilityUsers, this.classUsers, (a, b) => a.id === b.id);
       },
-      filteredUsers() {
-        return this.usersNotInClass.filter(user => userMatchesFilter(user, this.filterInput));
-      },
       sortedFilteredUsers() {
         return filterAndSortUsers(this.usersNotInClass, user =>
           userMatchesFilter(user, this.filterInput)
@@ -167,9 +163,6 @@
       },
       visibleFilteredUsers() {
         return this.sortedFilteredUsers.slice(this.startRange, this.endRange);
-      },
-      showConfirmEnrollmentModal() {
-        return this.modalShown === Modals.CONFIRM_ENROLLMENT;
       },
       emptyMessage() {
         if (this.facilityUsers.length === 0) {
@@ -209,8 +202,6 @@
 
 
 <style lang="scss" scoped>
-
-  @import '~kolibri.styles.definitions';
 
   .actions-header,
   .footer,

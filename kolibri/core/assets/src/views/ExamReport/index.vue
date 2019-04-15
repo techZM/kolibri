@@ -17,7 +17,12 @@
       @select="handleNavigateToQuestion"
     />
 
-    <div slot="main" class="exercise-container">
+    <div
+      v-if="exercise"
+      slot="main"
+      class="exercise-container"
+      :style="{ backgroundColor: $coreBgLight }"
+    >
       <h3>{{ $tr('question', {questionNumber: questionNumber + 1}) }}</h3>
 
       <KCheckbox
@@ -32,12 +37,11 @@
         @select="navigateToQuestionAttempt"
       />
       <ContentRenderer
-        :id="exercise.id"
+        v-if="exercise"
         :itemId="itemId"
         :allowHints="false"
         :kind="exercise.kind"
         :files="exercise.files"
-        :contentId="exercise.content_id"
         :available="exercise.available"
         :extraFields="exercise.extra_fields"
         :interactive="false"
@@ -46,6 +50,10 @@
         :showCorrectAnswer="showCorrectAnswer"
       />
     </div>
+
+    <p v-else slot="main">
+      {{ $tr('noItemId') }}
+    </p>
   </MultiPaneLayout>
 
 </template>
@@ -53,6 +61,7 @@
 
 <script>
 
+  import themeMixin from 'kolibri.coreVue.mixins.themeMixin';
   import ContentRenderer from 'kolibri.coreVue.components.ContentRenderer';
   import AttemptLogList from 'kolibri.coreVue.components.AttemptLogList';
   import InteractionList from 'kolibri.coreVue.components.InteractionList';
@@ -64,12 +73,13 @@
   export default {
     name: 'ExamReport',
     $trs: {
-      backTo: 'Back to exam report for { title }',
+      backTo: 'Back to quiz report for { title }',
       correctAnswer: 'Correct answer',
       yourAnswer: 'Your answer',
       correctAnswerCannotBeDisplayed: 'Correct answer cannot be displayed',
       question: 'Question { questionNumber, number }',
       showCorrectAnswerLabel: 'Show correct answer',
+      noItemId: 'This question has an error, please move on to the next question',
     },
     components: {
       ContentRenderer,
@@ -79,6 +89,7 @@
       KCheckbox,
       MultiPaneLayout,
     },
+    mixins: [themeMixin],
     props: {
       examAttempts: {
         type: Array,
@@ -151,9 +162,12 @@
     computed: {
       attemptLogs() {
         return this.examAttempts.map(attempt => {
-          const questionId = this.questions[attempt.questionNumber - 1].contentId;
-          const num_coach_contents = find(this.exerciseContentNodes, { id: questionId })
-            .num_coach_contents;
+          let num_coach_contents = 0;
+          const exerciseId = this.questions[attempt.questionNumber - 1].exercise_id;
+          const exerciseMatch = find(this.exerciseContentNodes, { id: exerciseId });
+          if (exerciseMatch) {
+            num_coach_contents = exerciseMatch.num_coach_contents;
+          }
           return { ...attempt, num_coach_contents };
         });
       },
@@ -188,11 +202,8 @@
 
 <style lang="scss" scoped>
 
-  @import '~kolibri.styles.definitions';
-
   .exercise-container {
     padding: 8px;
-    background-color: $core-bg-light;
   }
 
   h3 {

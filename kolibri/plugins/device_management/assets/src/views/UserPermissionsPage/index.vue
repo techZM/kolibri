@@ -1,36 +1,49 @@
 <template>
 
-  <ImmersiveFullScreen v-bind="{ backPageLink, backPageText }">
+  <div>
     <!-- TODO should I try and use the baked in auth page? Does this have a URL-->
     <AuthMessage v-if="!isSuperuser" authorizedRole="superuser" />
 
-    <h1 v-else-if="user === null">{{ $tr('userDoesNotExist') }}</h1>
+    <h1 v-else-if="user === null">
+      {{ $tr('userDoesNotExist') }}
+    </h1>
 
     <template v-else>
       <div class="section user-info">
         <h1 dir="auto">
-          {{ user.full_name }}
-          <span v-if="isCurrentUser">
-            ({{ $tr('you') }})
-          </span>
+          <KLabeledIcon>
+            <KIcon slot="icon" person />
+            {{ user.full_name }}
+            <span v-if="isCurrentUser">
+              ({{ $tr('you') }})
+            </span>
+          </KLabeledIcon>
         </h1>
 
         <table>
           <tr>
-            <th scope="row">{{ $tr('usernameLabel') }}</th>
+            <th scope="row">
+              {{ $tr('usernameLabel') }}
+            </th>
             <td>{{ user.username }}</td>
           </tr>
 
           <tr>
-            <th scope="row">{{ $tr('userTypeLabel') }}</th>
+            <th scope="row">
+              {{ $tr('userTypeLabel') }}
+            </th>
             <td>
               <UserTypeDisplay :userType="UserType(user)" />
             </td>
           </tr>
 
           <tr>
-            <th scope="row">{{ $tr('facilityLabel') }}</th>
-            <td dir="auto">{{ facilityName }}</td>
+            <th scope="row">
+              {{ $tr('facilityLabel') }}
+            </th>
+            <td dir="auto">
+              {{ facilityName }}
+            </td>
           </tr>
         </table>
 
@@ -46,7 +59,12 @@
         />
         <PermissionsIcon permissionType="SUPERUSER" class="permissions-icon" />
 
-        <ul class="checkbox-description" :class="{disabled: superuserDisabled}">
+        <ul
+          class="checkbox-description"
+          :style="{
+            color: superuserDisabled ? $coreTextDisabled : $coreTextAnnotation
+          }"
+        >
           <li>{{ $tr('superAdminExplanation1') }}</li>
           <li>{{ $tr('superAdminExplanation2') }}</li>
         </ul>
@@ -87,7 +105,7 @@
       </div>
     </template>
 
-  </ImmersiveFullScreen>
+  </div>
 
 </template>
 
@@ -95,14 +113,15 @@
 <script>
 
   import { mapState, mapGetters, mapActions } from 'vuex';
+  import themeMixin from 'kolibri.coreVue.mixins.themeMixin';
   import UserType from 'kolibri.utils.UserType';
-  import ImmersiveFullScreen from 'kolibri.coreVue.components.ImmersiveFullScreen';
   import KButton from 'kolibri.coreVue.components.KButton';
   import KCheckbox from 'kolibri.coreVue.components.KCheckbox';
+  import KIcon from 'kolibri.coreVue.components.KIcon';
+  import KLabeledIcon from 'kolibri.coreVue.components.KLabeledIcon';
   import AuthMessage from 'kolibri.coreVue.components.AuthMessage';
   import PermissionsIcon from 'kolibri.coreVue.components.PermissionsIcon';
   import UserTypeDisplay from 'kolibri.coreVue.components.UserTypeDisplay';
-  import { PageNames } from '../../constants';
 
   const SUCCESS = 'SUCCESS';
   const IN_PROGRESS = 'IN_PROGRESS';
@@ -117,12 +136,14 @@
     },
     components: {
       AuthMessage,
-      ImmersiveFullScreen,
       KButton,
       KCheckbox,
       PermissionsIcon,
       UserTypeDisplay,
+      KIcon,
+      KLabeledIcon,
     },
+    mixins: [themeMixin],
     data() {
       return {
         devicePermissionsChecked: undefined,
@@ -163,16 +184,6 @@
             return '';
         }
       },
-      backPageLink() {
-        if (this.isSuperuser) {
-          return { name: PageNames.MANAGE_PERMISSIONS_PAGE };
-        }
-        return { name: PageNames.MANAGE_CONTENT_PAGE };
-      },
-      backPageText() {
-        if (!this.isSuperuser) return this.$tr('goBack');
-        return this.user ? this.user.full_name : this.$tr('invalidUser');
-      },
       // "dirty check" of permissions
       permissionsAreUnchanged() {
         return (
@@ -208,10 +219,7 @@
           can_manage_content: this.devicePermissionsChecked,
         })
           .then(() => {
-            this.createSnackbar({
-              text: this.$tr('permissionChangeConfirmation'),
-              autoDismiss: true,
-            });
+            this.createSnackbar(this.$tr('permissionChangeConfirmation'));
             this.saveProgress = SUCCESS;
             this.uiBlocked = false;
           })
@@ -228,10 +236,8 @@
     $trs: {
       cancelButton: 'Cancel',
       devicePermissions: 'Device permissions',
-      devicePermissionsDetails: 'Can import and export content channels',
+      devicePermissionsDetails: 'Can manage content on this device',
       documentTitle: "{ name }'s Device Permissions",
-      goBack: 'Go Back',
-      invalidUser: 'Invalid user ID',
       makeSuperAdmin: 'Make super admin',
       permissionChangeConfirmation: 'Changes saved',
       saveButton: 'Save Changes',
@@ -253,8 +259,6 @@
 
 
 <style lang="scss" scoped>
-
-  @import '~kolibri.styles.definitions';
 
   .no-margin {
     margin-left: 0;
@@ -278,19 +282,14 @@
     padding: 0;
     margin: 0 0 0 50px;
     font-size: 12px;
-    color: $core-text-annotation;
-    &.disabled {
-      color: $core-text-disabled;
-    }
   }
 
   .section {
-    padding: 1em;
+    margin-bottom: 16px;
   }
 
   .permissions-icon {
     display: inline;
-    // was 5px in the mocks, this is kolibri standard(?)
     margin-left: 8px;
   }
 

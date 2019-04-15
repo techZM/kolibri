@@ -82,10 +82,28 @@
 
 @font-face {
   font-family: 'noto-full';
+  src: url('noto-full.NotoSansGujarati.400.woff') format('woff');
+  font-style: normal;
+  font-weight: normal;
+  unicode-range: U+A81-A83,U+A85-A8D,U+A8F-A91,U+A93-AA8,U+AAA-AB0,U+AB2-AB3,U+AB5-AB9,U+ABC-AC5,U+AC7-AC9,U+ACB-ACD,U+AD0,U+AE0-AE3,U+AE6-AF1,U+A830-A839;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'noto-full';
+  src: url('noto-full.NotoSansGujarati.700.woff') format('woff');
+  font-style: normal;
+  font-weight: bold;
+  unicode-range: U+A81-A83,U+A85-A8D,U+A8F-A91,U+A93-AA8,U+AAA-AB0,U+AB2-AB3,U+AB5-AB9,U+ABC-AC5,U+AC7-AC9,U+ACB-ACD,U+AD0,U+AE0-AE3,U+AE6-AF1,U+A830-A839;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'noto-full';
   src: url('noto-full.NotoSansDevanagari.400.woff') format('woff');
   font-style: normal;
   font-weight: normal;
-  unicode-range: U+900-950,U+953-963,U+966-97F,U+1CD0-1CF6,U+1CF8-1CF9,U+A830-A839,U+A8E0-A8FD;
+  unicode-range: U+900-950,U+953-963,U+966-97F,U+1CD0-1CF6,U+1CF8-1CF9,U+A8E0-A8FD;
   font-display: swap;
 }
 
@@ -94,7 +112,25 @@
   src: url('noto-full.NotoSansDevanagari.700.woff') format('woff');
   font-style: normal;
   font-weight: bold;
-  unicode-range: U+900-950,U+953-963,U+966-97F,U+1CD0-1CF6,U+1CF8-1CF9,U+A830-A839,U+A8E0-A8FD;
+  unicode-range: U+900-950,U+953-963,U+966-97F,U+1CD0-1CF6,U+1CF8-1CF9,U+A8E0-A8FD;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'noto-full';
+  src: url('noto-full.NotoSansMyanmar.400.woff') format('woff');
+  font-style: normal;
+  font-weight: normal;
+  unicode-range: U+1000-109F,U+A9E0-A9FE,U+AA60-AA7F;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'noto-full';
+  src: url('noto-full.NotoSansMyanmar.700.woff') format('woff');
+  font-style: normal;
+  font-weight: bold;
+  unicode-range: U+1000-109F,U+A9E0-A9FE,U+AA60-AA7F;
   font-display: swap;
 }
 
@@ -208,24 +244,6 @@
 
 @font-face {
   font-family: 'noto-full';
-  src: url('noto-full.NotoSansGujarati.400.woff') format('woff');
-  font-style: normal;
-  font-weight: normal;
-  unicode-range: U+A81-A83,U+A85-A8D,U+A8F-A91,U+A93-AA8,U+AAA-AB0,U+AB2-AB3,U+AB5-AB9,U+ABC-AC5,U+AC7-AC9,U+ACB-ACD,U+AD0,U+AE0-AE3,U+AE6-AF1;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'noto-full';
-  src: url('noto-full.NotoSansGujarati.700.woff') format('woff');
-  font-style: normal;
-  font-weight: bold;
-  unicode-range: U+A81-A83,U+A85-A8D,U+A8F-A91,U+A93-AA8,U+AAA-AB0,U+AB2-AB3,U+AB5-AB9,U+ABC-AC5,U+AC7-AC9,U+ACB-ACD,U+AD0,U+AE0-AE3,U+AE6-AF1;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'noto-full';
   src: url('noto-full.NotoSansGurmukhi.400.woff') format('woff');
   font-style: normal;
   font-weight: normal;
@@ -257,6 +275,24 @@
   font-style: normal;
   font-weight: bold;
   unicode-range: U+591-5C7,U+5D0-5EA,U+5F0-5F4,U+FB1D-FB36,U+FB38-FB3C,U+FB3E,U+FB40-FB41,U+FB43-FB44,U+FB46-FB4F;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'noto-full';
+  src: url('noto-full.NotoSansJavanese.400.woff') format('woff');
+  font-style: normal;
+  font-weight: normal;
+  unicode-range: U+A980-A9CD,U+A9CF-A9D9,U+A9DE-A9DF;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'noto-full';
+  src: url('noto-full.NotoSansJavanese.700.woff') format('woff');
+  font-style: normal;
+  font-weight: bold;
+  unicode-range: U+A980-A9CD,U+A9CF-A9D9,U+A9DE-A9DF;
   font-display: swap;
 }
 
@@ -329,24 +365,6 @@
   font-style: normal;
   font-weight: bold;
   unicode-range: U+D01-D03,U+D05-D0C,U+D0E-D10,U+D12-D3A,U+D3D-D44,U+D46-D48,U+D4A-D4F,U+D54-D63,U+D66-D7F;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'noto-full';
-  src: url('noto-full.NotoSansMyanmar.400.woff') format('woff');
-  font-style: normal;
-  font-weight: normal;
-  unicode-range: U+1000-109F,U+A9E0-A9FE,U+AA60-AA7F;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'noto-full';
-  src: url('noto-full.NotoSansMyanmar.700.woff') format('woff');
-  font-style: normal;
-  font-weight: bold;
-  unicode-range: U+1000-109F,U+A9E0-A9FE,U+AA60-AA7F;
   font-display: swap;
 }
 
