@@ -21,15 +21,6 @@
         category="navigation"
       />
     </KNavbarLink>
-    <KNavbarLink
-      :title="$tr('recommended')"
-      :link="recommendedLink"
-    >
-      <mat-svg
-        name="forum"
-        category="communication"
-      />
-    </KNavbarLink>
   </KNavbar>
 
 </template>
