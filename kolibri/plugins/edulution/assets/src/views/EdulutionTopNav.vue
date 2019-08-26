@@ -21,15 +21,6 @@
         category="navigation"
       />
     </KNavbarLink>
-    <!--<KNavbarLink
-      :title="$tr('recommended')"
-      :link="recommendedLink"
-    >
-      <mat-svg
-        name="forum"
-        category="communication"
-      />
-    </KNavbarLink>-->
   </KNavbar>
 
 </template>
@@ -57,9 +48,7 @@
         channelsLink: {
           name: PageNames.EDULUTION_TOPICS_ROOT,
         },
-        recommendedLink: {
-          name: PageNames.RECOMMENDED,
-        },
+        /*recommended link removed*/
       };
     },
     computed: {
@@ -70,8 +59,8 @@
     },
     methods: {},
     $trs: {
-      recommended: 'Recommended',
-      channels: 'Channels',
+      /*change text to display channels as Playlists*/
+      channels: 'Playlists',
       classes: 'Classes',
     },
   };

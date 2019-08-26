@@ -26,8 +26,10 @@
   export default {
     name: 'ChannelsPage',
     $trs: {
-      channels: 'Channels',
-      documentTitle: 'All channels',
+      /*change text from channels to playlists on edulution plugin*/
+      /*because coaches and learners already familiar with this term*/
+      channels: 'Playlists',
+      documentTitle: 'All Playlists',
     },
     metaInfo() {
       return {

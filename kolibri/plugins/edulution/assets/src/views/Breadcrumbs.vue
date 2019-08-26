@@ -20,7 +20,8 @@
     name: 'Breadcrumbs',
     $trs: {
       recommended: 'Recommended',
-      channels: 'Channels',
+      /*change channels text to playlists*/
+      channels: 'Playlists',
     },
     components: { KBreadcrumbs },
     mixins: [classesBreadcrumbItems],
