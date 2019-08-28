@@ -85,7 +85,7 @@
           // All Channels Link
           {
             text: this.$tr('channels'),
-            link: { name: PageNames.TOPICS_ROOT },
+            link: { name: PageNames.EDULUTION_TOPICS_ROOT },
           },
           ...this.middleTopicBreadcrumbs,
           this.lastTopicBreadcrumb,
