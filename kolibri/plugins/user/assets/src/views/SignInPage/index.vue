@@ -41,23 +41,6 @@
                   @keydown="handleKeyboardNav"
                 />
               </transition>
-              <transition name="list">
-                <div class="suggestions-wrapper">
-                  <ul
-                    v-if="simpleSignIn && suggestions.length"
-                    v-show="showDropdown"
-                    class="suggestions"
-                  >
-                    <UiAutocompleteSuggestion
-                      v-for="(suggestion, i) in suggestions"
-                      :key="i"
-                      :suggestion="suggestion"
-                      :style="{ backgroundColor: highlightedIndex === i ? $coreGrey : ''}"
-                      @mousedown.native="fillUsername(suggestion)"
-                    />
-                  </ul>
-                </div>
-              </transition>
               <transition name="textbox">
                 <KTextbox
                   v-if="needPasswordField"
@@ -147,7 +130,6 @@
   import KTextbox from 'kolibri.coreVue.components.KTextbox';
   import CoreLogo from 'kolibri.coreVue.components.CoreLogo';
   import { validateUsername } from 'kolibri.utils.validators';
-  import UiAutocompleteSuggestion from 'keen-ui/src/UiAutocompleteSuggestion';
   import PrivacyInfoModal from 'kolibri.coreVue.components.PrivacyInfoModal';
   import UiAlert from 'keen-ui/src/UiAlert';
   import responsiveWindow from 'kolibri.coreVue.mixins.responsiveWindow';
@@ -186,7 +168,6 @@
       KTextbox,
       FacilityModal,
       CoreLogo,
-      UiAutocompleteSuggestion,
       UiAlert,
       LanguageSwitcherFooter,
       PrivacyInfoModal,
@@ -307,9 +288,6 @@
           })`,
         };
       },
-    },
-    watch: {
-      username: 'setSuggestionTerm',
     },
     mounted() {
       /*
