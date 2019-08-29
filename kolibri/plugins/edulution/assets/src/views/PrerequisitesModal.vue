@@ -38,9 +38,9 @@
   export default {
     name: 'PrerequisitesModal',
     $trs: {
-      prerequisites: 'Prerequisites',
-      close: 'Close',
-      goToLesson: 'Go to lesson',
+      prerequisites: 'Hi 🙂. It looks like you need to complete these actvities first',
+      close: 'Go back',
+      goToLesson: 'Skip ahead',
     },
     components: {
       KModal,
