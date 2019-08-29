@@ -42,7 +42,7 @@
     },
     mixins: [commonCoach],
     $trs: {
-      activeLearners: 'Active Learners',
+      activeLearners: 'Live Learners',
     },
     computed: {
       liveAttendance() {
