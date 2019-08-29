@@ -39,13 +39,13 @@
           </HeaderTableRow>
         </HeaderTable>
       </KGridItem>
-      <KGridItem sizes="100, 50, 50" percentage align="right">
+      <!--       <KGridItem sizes="100, 50, 50" percentage align="right">
         <KButton
           :text="$tr('subscriptionButtonLabel')"
           :primary="false"
           @click="displayModal(SubscriptionModals.CHOOSE_CLASS_SUBSCRIPTIONS)"
         />
-      </KGridItem>
+      </KGridItem> -->
     </KGrid>
 
     <CoachUserCreateModal
@@ -53,11 +53,11 @@
       :classId="thisClassId.join('')"
       :className="thisClassName.join('')"
     />
-    <SubscribeModal
+    <!--     <SubscribeModal
       v-if="modalShown===SubscriptionModals.CHOOSE_CLASS_SUBSCRIPTIONS"
       :collectionId="thisClassId.join('')"
       :collectionName="thisClassName.join('')"
-    />
+    /> -->
   </KPageContainer>
 
 </template>
@@ -69,8 +69,8 @@
   import { localeCompare } from 'kolibri.utils.i18n';
   import commonCoach from '../../common';
   import { Modals } from '../../../constants';
-  import { SubscriptionModals } from '../../../constants/subscriptionsConstants';
-  import SubscribeModal from '../../SubscribeModal';
+  /*  import { SubscriptionModals } from '../../../constants/subscriptionsConstants';
+    import SubscribeModal from '../../SubscribeModal';*/
   import CoachUserCreateModal from './CoachUserCreateModal';
 
   export default {
@@ -81,7 +81,7 @@
       };
     },
     components: {
-      SubscribeModal,
+      /*SubscribeModal,*/
       CoachUserCreateModal,
     },
     mixins: [commonCoach],
@@ -94,13 +94,13 @@
       coach: '{count, plural, one {Coach} other {Coaches}}',
       learner: '{count, plural, one {Learner} other {Learners}}',
       newUserButtonLabel: 'Create New Learner',
-      subscriptionButtonLabel: 'Subscribe to Channels',
+      /*subscriptionButtonLabel: 'Subscribe to Channels',*/
     },
     computed: {
       ...mapGetters(['classListPageEnabled']),
       ...mapState('userManagement', ['facilityUsers', 'modalShown']),
       Modals: () => Modals,
-      SubscriptionModals: () => SubscriptionModals,
+      /*SubscriptionModals: () => SubscriptionModals,*/
       coachNames() {
         return this.coaches.map(coach => coach.name);
       },
