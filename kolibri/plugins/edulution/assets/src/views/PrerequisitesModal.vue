@@ -1,7 +1,7 @@
 <template>
 
   <KModal
-    :title="$tr('prerequisites')"
+    :title="$tr('prerequisitesText')"
     :submitText="$tr('close')"
     :cancelText="$tr('goToLesson')"
     @submit="close"
@@ -31,14 +31,14 @@
 
   import { mapState } from 'vuex';
   import KModal from 'kolibri.coreVue.components.KModal';
-  import { validateLinkObject } from 'kolibri.utils.validators';
+  /*import { validateLinkObject } from 'kolibri.utils.validators';*/
   import KRouterLink from 'kolibri.coreVue.components.KRouterLink';
   import { PageNames } from '../constants';
 
   export default {
     name: 'PrerequisitesModal',
     $trs: {
-      prerequisites: 'Hi 🙂. It looks like you need to complete these actvities first',
+      prerequisitesText: 'Hi, It looks like you need to complete these actvities first',
       close: 'Go back',
       goToLesson: 'Skip ahead',
     },
