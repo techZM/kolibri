@@ -70,16 +70,6 @@
 
           <template slot="options">
             <component :is="component" v-for="component in menuOptions" :key="component.name" />
-            <CoreMenuOption
-              :label="$tr('languageSwitchMenuOption')"
-              @select="handleChangeLanguage"
-            >
-              <mat-svg
-                slot="icon"
-                name="language"
-                category="action"
-              />
-            </CoreMenuOption>
             <LogoutSideNavEntry v-if="isUserLoggedIn" />
           </template>
 
@@ -102,7 +92,6 @@
   import UiToolbar from 'keen-ui/src/UiToolbar';
   import UiIconButton from 'kolibri.coreVue.components.UiIconButton';
   import CoreMenu from 'kolibri.coreVue.components.CoreMenu';
-  import CoreMenuOption from 'kolibri.coreVue.components.CoreMenuOption';
   import UserTypeDisplay from 'kolibri.coreVue.components.UserTypeDisplay';
   import UiButton from 'keen-ui/src/UiButton';
   import navComponents from 'kolibri.utils.navComponents';
@@ -117,7 +106,6 @@
       UiIconButton,
       CoreMenu,
       UiButton,
-      CoreMenuOption,
       LogoutSideNavEntry,
       UserTypeDisplay,
     },
@@ -169,10 +157,6 @@
           this.userMenuDropdownIsOpen = false;
         }
         return event;
-      },
-      handleChangeLanguage() {
-        this.$emit('showLanguageModal');
-        this.userMenuDropdownIsOpen = false;
       },
       ...mapActions(['kolibriLogout']),
     },
