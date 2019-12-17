@@ -4,9 +4,11 @@ export const THEME_MODULE_NAMESPACE = 'kolibriCoreTheme';
 
 const initialState = {
   '$core-action-light': '#e2d1e0',
-  '$core-action-dark': '#157415',
+  '$core-action-dark': '#005EB8',
+  /*  '$core-action-dark': '#848D00',*/
 
-  '$core-accent-color': '#00A546',
+  '$core-accent-color': '#071D49',
+  /*'$core-accent-color': '#75B22A',*/
 
   '$core-bg-canvas': '#f9f9f9',
 
@@ -18,8 +20,10 @@ const initialState = {
   '$core-bg-error': '#eeeeee',
 
   /* Status colors */
-  '$core-status-progress': '#2196f3',
-  '$core-status-mastered': '#ffc107',
+  '$core-status-progress': '#FF9E1B',
+  /*'$core-status-progress': '#ff9e1b',*/
+  '$core-status-mastered': '#009639',
+  /*'$core-status-mastered': '#6cace4',*/
   '$core-status-correct': '#4caf50',
   '$core-status-wrong': '#df4d4f',
 
