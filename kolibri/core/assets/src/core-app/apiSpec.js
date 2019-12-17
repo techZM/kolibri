@@ -40,6 +40,7 @@ import KTextbox from '../views/KTextbox';
 import KNavbar from '../views/KNavbar';
 import KNavbarLink from '../views/KNavbar/KNavbarLink';
 import CoreLogo from '../views/CoreLogo';
+import EduLogo from '../views/EduLogo';
 import LanguageSwitcherList from '../views/language-switcher/LanguageSwitcherList';
 import ImmersiveFullScreen from '../views/ImmersiveFullScreen';
 import ElapsedTime from '../views/ElapsedTime';
@@ -175,6 +176,7 @@ export default {
       MultiPaneLayout,
       CoreFullscreen,
       CoreLogo,
+      EduLogo,
       UiAlert,
       UiIconButton,
       PrivacyInfoModal,
