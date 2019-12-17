@@ -11,13 +11,13 @@
       <div class="table-row main-row" :style="backgroundImageStyle">
         <div class="table-cell main-cell">
           <div class="box" :style="{ backgroundColor: $coreBgLight }">
-            <CoreLogo :style="{'height': `${logoHeight}px`}" />
-            <h1
+            <EduLogo :style="{'height': `${logoHeight}px`}" />
+            <!--             <h1
               class="kolibri-title"
               :style="{'font-size': `${logoTextSize}px`}"
             >
               {{ $tr('kolibri') }}
-            </h1>
+            </h1> -->
             <form ref="form" class="login-form" @submit.prevent="signIn">
               <UiAlert
                 v-if="invalidCredentials"
@@ -92,7 +92,7 @@
       </div>
       <div class="table-row">
         <div class="table-cell footer-cell" :style="{ backgroundColor: $coreBgLight }">
-          <LanguageSwitcherFooter />
+          <!-- <LanguageSwitcherFooter /> -->
           <div class="small-text">
             <span class="version-string">
               {{ versionMsg }}
@@ -128,14 +128,14 @@
   import KRouterLink from 'kolibri.coreVue.components.KRouterLink';
   import KExternalLink from 'kolibri.coreVue.components.KExternalLink';
   import KTextbox from 'kolibri.coreVue.components.KTextbox';
-  import CoreLogo from 'kolibri.coreVue.components.CoreLogo';
+  import EduLogo from 'kolibri.coreVue.components.EduLogo';
   import { validateUsername } from 'kolibri.utils.validators';
   import PrivacyInfoModal from 'kolibri.coreVue.components.PrivacyInfoModal';
   import UiAlert from 'keen-ui/src/UiAlert';
   import responsiveWindow from 'kolibri.coreVue.mixins.responsiveWindow';
   import urls from 'kolibri.urls';
   import { PageNames } from '../../constants';
-  import LanguageSwitcherFooter from '../LanguageSwitcherFooter';
+  /*import LanguageSwitcherFooter from '../LanguageSwitcherFooter';*/
   import FacilityModal from './FacilityModal';
 
   export default {
@@ -167,9 +167,9 @@
       KExternalLink,
       KTextbox,
       FacilityModal,
-      CoreLogo,
+      EduLogo,
       UiAlert,
-      LanguageSwitcherFooter,
+      /*LanguageSwitcherFooter,*/
       PrivacyInfoModal,
     },
     mixins: [responsiveWindow, themeMixin],
@@ -264,9 +264,9 @@
       },
       logoHeight() {
         const CRITICAL_ACTIONS_HEIGHT = 350; // title + form + action buttons
-        let height = this.windowHeight - CRITICAL_ACTIONS_HEIGHT - 32;
-        height = Math.max(height, 32);
-        height = Math.min(height, 80);
+        let height = this.windowHeight - CRITICAL_ACTIONS_HEIGHT - 64;
+        height = Math.max(height, 64);
+        height = Math.min(height, 160);
         return height;
       },
       logoTextSize() {
