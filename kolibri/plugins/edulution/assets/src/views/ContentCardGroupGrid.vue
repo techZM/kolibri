@@ -83,7 +83,13 @@
   }
 
   .content-grid {
-    padding-left: 7.8% !important;
+    padding-left: 10.9% !important;
+  }
+
+  @media only screen and (max-width: 911px) {
+    .content-grid {
+      padding-left: 6.9% !important;
+    }
   }
 
 </style>
