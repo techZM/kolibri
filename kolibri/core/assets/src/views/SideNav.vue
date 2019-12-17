@@ -133,7 +133,7 @@
     },
     mixins: [responsiveWindow, responsiveElement, navComponentsMixin, themeMixin],
     $trs: {
-      kolibri: 'Kolibri',
+      kolibri: 'Edulution',
       navigationLabel: 'Main user navigation',
       closeNav: 'Close navigation',
       poweredBy: 'Kolibri {version}',
