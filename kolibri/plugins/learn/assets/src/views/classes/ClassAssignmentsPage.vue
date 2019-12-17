@@ -4,13 +4,13 @@
     <h1 dir="auto" class="classroom-name">
       {{ classroomName }}
     </h1>
-
-    <AssignedExamsCards
-      :exams="exams"
-      :isMobile="windowIsSmall"
-    />
     <AssignedLessonsCards
       :lessons="lessons"
+      :isMobile="windowIsSmall"
+    />
+ 
+    <AssignedExamsCards
+      :exams="exams"
       :isMobile="windowIsSmall"
     />
   </div>
