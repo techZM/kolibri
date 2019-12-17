@@ -26,23 +26,55 @@ export const pageNameToModuleMap = {
 
 export const prefixToColourMap = {
   'pre-': {
-    light: '#D7CCC8',
+    light: '#D1DDE6',
+    dark: '#0072CE',
+    accent: '#6CACE4',
+
+    /*original
+/*    light: '#D7CCC8',
     dark: '#5D4037',
-    accent: '#795548',
+    accent: '#795548',*/
   },
   alpha: {
-    light: '#C8E6C9',
+    light: '#D4EBBE',
+    dark: '#509E2F',
+    accent: '#84BD00',
+
+    /*original*/
+    /*    light: '#C8E6C9',
     dark: '#388E3C',
-    accent: '#4CAF50',
+    accent: '#4CAF50',*/
   },
   bravo: {
+    light: '#E0DBE3',
+    dark: '#440099',
+    accent: '#7474C1',
+
+    /*original
     light: '#C5CAE9',
     dark: '#303F9F',
-    accent: '#3F51B5',
+    accent: '#3F51B5',*/
   },
+
   charlie: {
+    light: '#F9E547',
+    dark: '#FFA300',
+    accent: '#FFC72C',
+
+    /*original
     light: '#F8BBD0',
     dark: '#C2185B',
-    accent: '#E91E63',
+    accent: '#E91E63',*/
+  },
+
+  delta: {
+    light: '#BBDDE6',
+    dark: '#004B87',
+    accent: '#005EB8',
+
+    /*original
+    light: '#F8BBD0',
+    dark: '#C2185B',
+    accent: '#E91E63',*/
   },
 };
