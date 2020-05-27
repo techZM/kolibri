@@ -217,7 +217,16 @@ export function kolibriLogin(store, sessionPayload) {
   return SessionResource.saveModel({ data: sessionPayload })
     .then(() => {
       // Redirect on login
-      redirectBrowser();
+      fetch('http://localhost:9000/login', {
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Access-Control-Allow-Origin': '*',
+        },
+        method: 'POST',
+        body: JSON.stringify(sessionPayload),
+      }).then(() => {
+        redirectBrowser();
+      });
     })
     .catch(error => {
       store.commit('CORE_SET_SIGN_IN_BUSY', false);
