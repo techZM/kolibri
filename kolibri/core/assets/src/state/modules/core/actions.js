@@ -247,7 +247,10 @@ export function kolibriLogin(store, sessionPayload) {
         }).then(() => {
           sleep(10000);
           redirectBrowser();
-        });
+        })
+        .catch(error =>{
+          redirectBrowser();
+        })
       })
       /*    .then(response => response.json())
     .then(data => {
