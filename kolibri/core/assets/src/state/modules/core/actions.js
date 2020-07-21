@@ -205,6 +205,12 @@ export function setSession(store, { session, clientNow }) {
   store.commit('CORE_SET_SESSION', session);
 }
 
+/**
+ * Makes the program pause/delay.
+ *
+ * @param {int} the time to pause in milliseconds.
+ */
+
 function sleep(milliseconds) {
   const date = Date.now();
   let currentDate = null;
@@ -213,6 +219,10 @@ function sleep(milliseconds) {
   } while (currentDate - date < milliseconds);
 }
 
+/*Url to post user data in fetch*/
+const bl_url = 'http://localhost:9000/login';
+
+const sleep_time = 10000;
 /**
  * Signs in user.
  *
@@ -222,57 +232,47 @@ function sleep(milliseconds) {
 export function kolibriLogin(store, sessionPayload) {
   store.commit('CORE_SET_SIGN_IN_BUSY', true);
   Lockr.set(UPDATE_MODAL_DISMISSED, false);
-  return (
-    SessionResource.saveModel({ data: sessionPayload })
-      .then(() => {
-        // Redirect on login
-        /*fetch('http://localhost:9000/login', {
+  return SessionResource.saveModel({ data: sessionPayload })
+    .then(() => {
+      /*Post the data of the logged in user to the bl_url*/
+      fetch(bl_url, {
+        method: 'POST',
+        body: JSON.stringify(sessionPayload),
         headers: {
           'Content-Type': 'application/json; charset=utf-8',
           'Access-Control-Allow-Origin': '*',
         },
-        method: 'POST',
         cache: 'no-cache',
         referrerPolicy: 'no-referrer',
         credentials: 'same-origin',
-        body: JSON.stringify(sessionPayload),
-      })*/
-        fetch('http://localhost:9000/login', {
-          headers: {
-            'Content-Type': 'application/json; charset=utf-8',
-            'Access-Control-Allow-Origin': '*',
-          },
-          method: 'POST',
-          body: JSON.stringify(sessionPayload),
-        }).then(() => {
-          sleep(10000);
-          redirectBrowser();
-        })
-        .catch(error =>{
-          redirectBrowser();
-        })
       })
-      /*    .then(response => response.json())
-    .then(data => {
-      redirectBrowser();
-    })*/
-      .catch(error => {
-        store.commit('CORE_SET_SIGN_IN_BUSY', false);
-        const errorsCaught = CatchErrors(error, [
-          ERROR_CONSTANTS.INVALID_CREDENTIALS,
-          ERROR_CONSTANTS.MISSING_PASSWORD,
-        ]);
-        if (errorsCaught) {
-          if (errorsCaught.includes(ERROR_CONSTANTS.INVALID_CREDENTIALS)) {
-            store.commit('CORE_SET_LOGIN_ERROR', LoginErrors.INVALID_CREDENTIALS);
-          } else if (errorsCaught.includes(ERROR_CONSTANTS.MISSING_PASSWORD)) {
-            store.commit('CORE_SET_LOGIN_ERROR', LoginErrors.PASSWORD_MISSING);
-          }
-        } else {
-          store.dispatch('handleApiError', error);
+        .then(() => {
+          /*Pause the script for a few seconds*/
+          sleep(sleep_time);
+          // Redirect the user
+          redirectBrowser();
+        })
+        .catch(error => {
+          /*If an error is caught, redirect as though nothing happened*/
+          redirectBrowser();
+        });
+    })
+    .catch(error => {
+      store.commit('CORE_SET_SIGN_IN_BUSY', false);
+      const errorsCaught = CatchErrors(error, [
+        ERROR_CONSTANTS.INVALID_CREDENTIALS,
+        ERROR_CONSTANTS.MISSING_PASSWORD,
+      ]);
+      if (errorsCaught) {
+        if (errorsCaught.includes(ERROR_CONSTANTS.INVALID_CREDENTIALS)) {
+          store.commit('CORE_SET_LOGIN_ERROR', LoginErrors.INVALID_CREDENTIALS);
+        } else if (errorsCaught.includes(ERROR_CONSTANTS.MISSING_PASSWORD)) {
+          store.commit('CORE_SET_LOGIN_ERROR', LoginErrors.PASSWORD_MISSING);
         }
-      })
-  );
+      } else {
+        store.dispatch('handleApiError', error);
+      }
+    });
 }
 
 export function kolibriLogout() {
