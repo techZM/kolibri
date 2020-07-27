@@ -220,9 +220,9 @@ function sleep(milliseconds) {
 }
 
 /*Url to post user data in fetch*/
-const bl_url = 'http://localhost:9000/login';
+const bl_url = 'http://192.168.8.100:9000/login';
 
-const sleep_time = 10000;
+const sleep_time = 2000;
 /**
  * Signs in user.
  *
@@ -242,6 +242,7 @@ export function kolibriLogin(store, sessionPayload) {
           'Content-Type': 'application/json; charset=utf-8',
           'Access-Control-Allow-Origin': '*',
         },
+        mode: 'cors',
         cache: 'no-cache',
         referrerPolicy: 'no-referrer',
         credentials: 'same-origin',
