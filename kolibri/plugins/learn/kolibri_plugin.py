@@ -19,12 +19,12 @@ class LearnPlugin1(KolibriPluginBase):
         return "^learn1/"
 
 
-class LearnRedirect(RoleBasedRedirectHook):
-    role = LEARNER
+# class LearnRedirect(RoleBasedRedirectHook):
+#     role = LEARNER
 
-    @property
-    def url(self):
-        return self.plugin_url(LearnPlugin1, 'learn1')
+#     @property
+#     def url(self):
+#         return self.plugin_url(LearnPlugin1, 'learn1')
 
 
 class LearnNavItem(NavigationHook, webpack_hooks.WebpackBundleHook):
